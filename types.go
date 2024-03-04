@@ -1191,6 +1191,24 @@ func (m MessageOrigin) IsChannel() bool {
 	return m.Type == MessageOriginChannel
 }
 
+func (m *MessageOrigin) UnmarshalJSON(data []byte) error {
+	type Alias MessageOrigin
+	aux := &struct {
+		Chat *Chat `json:"chat,omitempty"`
+		*Alias
+	}{
+		Alias: (*Alias)(m),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	if m.IsChannel() {
+		// MessageOriginChannel struct has Chat struct in chat field and MessageOriginChat in sender_chat
+		m.SenderChat = aux.Chat
+	}
+	return nil
+}
+
 // PhotoSize represents one size of a photo or a file / sticker thumbnail.
 type PhotoSize struct {
 	// FileID identifier for this file, which can be used to download or reuse
