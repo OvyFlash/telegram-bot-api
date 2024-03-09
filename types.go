@@ -122,7 +122,9 @@ type Update struct {
 	//
 	// optional
 	ChatJoinRequest *ChatJoinRequest `json:"chat_join_request,omitempty"`
-
+	// ChatBoost new incoming boost
+	//
+	// optional
 	ChatBoost *ChatBoostUpdated `json:"chat_boost,omitempty"`
 }
 
