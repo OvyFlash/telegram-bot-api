@@ -2374,6 +2374,8 @@ type InlineKeyboardButton struct {
 	// Text label text on the button
 	Text string `json:"text"`
 	// URL HTTP or tg:// url to be opened when button is pressed.
+	// Links tg://user?id=<user_id> can be used to mention a user by their identifier without using a username,
+	// if this is allowed by their privacy settings.
 	//
 	// optional
 	URL *string `json:"url,omitempty"`
@@ -2389,6 +2391,7 @@ type InlineKeyboardButton struct {
 	// WebApp is the Description of the Web App that will be launched when the user presses the button.
 	// The Web App will be able to send an arbitrary message on behalf of the user using the method
 	// answerWebAppQuery. Available only in private chats between a user and the bot.
+	// Not supported for messages sent on behalf of a Telegram Business account.
 	//
 	// optional
 	WebApp *WebAppInfo `json:"web_app,omitempty"`
@@ -2401,6 +2404,7 @@ type InlineKeyboardButton struct {
 	// Especially useful when combined with switch_pm… actions – in this case
 	// the user will be automatically returned to the chat they switched from,
 	// skipping the chat selection screen.
+	// Not supported for messages sent on behalf of a Telegram Business account.
 	//
 	// optional
 	SwitchInlineQuery *string `json:"switch_inline_query,omitempty"`
@@ -2410,12 +2414,14 @@ type InlineKeyboardButton struct {
 	//
 	// This offers a quick way for the user to open your bot in inline mode
 	// in the same chat – good for selecting something from multiple options.
+	// Not supported for messages sent on behalf of a Telegram Business account.
 	//
 	// optional
 	SwitchInlineQueryCurrentChat *string `json:"switch_inline_query_current_chat,omitempty"`
 	//SwitchInlineQueryChosenChat If set, pressing the button will prompt the user to
 	//select one of their chats of the specified type, open that chat and insert the bot's
-	//username and the specified inline query in the input field
+	//username and the specified inline query in the input field.
+	// Not supported for messages sent on behalf of a Telegram Business account.
 	//
 	//optional
 	SwitchInlineQueryChosenChat *SwitchInlineQueryChosenChat `json:"switch_inline_query_chosen_chat,omitempty"`
@@ -4888,4 +4894,70 @@ type PreCheckoutQuery struct {
 	//
 	// optional
 	OrderInfo *OrderInfo `json:"order_info,omitempty"`
+}
+
+// RevenueWithdrawalState describes the state of a revenue withdrawal operation.
+// Currently, it can be one of
+//   - RevenueWithdrawalStatePending
+//   - RevenueWithdrawalStateSucceeded
+//   - RevenueWithdrawalStateFailed
+type RevenueWithdrawalState struct {
+	// Type of the state. Must be one of:
+	// 	- pending
+	// 	- succeeded
+	//  - failed
+	Type string `json:"type"`
+	// 	Date the withdrawal was completed in Unix time. Represents only in “succeeded” state
+	Date int64 `json:"date,omitempty"`
+	// An HTTPS URL that can be used to see transaction details.
+	// Represents only in “succeeded” state
+	URL string `json:"url,omitempty"`
+}
+
+// TransactionPartner describes the source of a transaction, or its recipient for outgoing transactions. Currently, it can be one of
+//   - TransactionPartnerFragment
+//   - TransactionPartnerUser
+//   - TransactionPartnerOther
+type TransactionPartner struct {
+	//Type of the transaction partner. Must be one of:
+	//	- fragment
+	//	- user
+	//  - other
+	Type string `json:"type"`
+	// State of the transaction if the transaction is outgoing.
+	// Represent only in "fragment" state
+	//
+	// optional
+	WithdrawalState *RevenueWithdrawalState `json:"withdrawal_state,omitempty"`
+	// Information about the user.
+	// Represent only in "user" state
+	User *User `json:"user,omitempty"`
+}
+
+// StarTransaction describes a Telegram Star transaction.
+type StarTransaction struct {
+	// Unique identifier of the transaction.
+	// Coincides with the identifer of the original transaction for refund transactions.
+	// Coincides with SuccessfulPayment.telegram_payment_charge_id for successful incoming payments from users.
+	ID string `json:"id"`
+	// Number of Telegram Stars transferred by the transaction
+	Amount int64 `json:"amount"`
+	// Date the transaction was created in Unix time
+	Date int64 `json:"date"`
+	// Source of an incoming transaction (e.g., a user purchasing goods or services, Fragment refunding a failed withdrawal).
+	// Only for incoming transactions
+	//
+	// optional
+	Source *TransactionPartner `json:"source,omitempty"`
+	// Receiver of an outgoing transaction (e.g., a user for a purchase refund, Fragment for a withdrawal).
+	// Only for outgoing transactions
+	//
+	// optional
+	Reciever *TransactionPartner `json:"reciever,omitempty"`
+}
+
+// StarTransactions contains a list of Telegram Star transactions.
+type StarTransactions struct {
+	// The list of transactions
+	Transactions []StarTransaction `json:"transactions"`
 }

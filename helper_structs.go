@@ -65,8 +65,9 @@ func (file BaseFile) params() (Params, error) {
 // BaseEdit is base type of all chat edits.
 type BaseEdit struct {
 	BaseChatMessage
-	InlineMessageID string
-	ReplyMarkup     *InlineKeyboardMarkup
+	InlineMessageID      string
+	ReplyMarkup          *InlineKeyboardMarkup
+	BusinessConnectionID string
 }
 
 func (edit BaseEdit) params() (Params, error) {
@@ -83,6 +84,7 @@ func (edit BaseEdit) params() (Params, error) {
 	}
 
 	err := params.AddInterface("reply_markup", edit.ReplyMarkup)
+	params.AddNonEmpty("business_connection_id", edit.BusinessConnectionID)
 
 	return params, err
 }

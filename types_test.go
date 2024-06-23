@@ -376,6 +376,7 @@ var (
 	_ Chattable = GetMyNameConfig{}
 	_ Chattable = SetMyNameConfig{}
 	_ Chattable = RefundStarPaymentConfig{}
+	_ Chattable = GetStarTransactionsConfig{}
 )
 
 // Ensure all Fileable types are correct.

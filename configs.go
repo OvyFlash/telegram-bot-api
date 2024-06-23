@@ -2035,6 +2035,27 @@ func (config PreCheckoutConfig) params() (Params, error) {
 	return params, nil
 }
 
+// Returns the bot's Telegram Star transactions in chronological order. On success, returns a StarTransactions object.
+type GetStarTransactionsConfig struct {
+	// Number of transactions to skip in the response
+	Offset int64
+	// The maximum number of transactions to be retrieved. Values between 1-100 are accepted. Defaults to 100.
+	Limit int64
+}
+
+func (config GetStarTransactionsConfig) method() string {
+	return "getStarTransactions"
+}
+
+func (config GetStarTransactionsConfig) params() (Params, error) {
+	params := make(Params)
+
+	params.AddNonZero64("offset", config.Offset)
+	params.AddNonZero64("limit", config.Limit)
+
+	return params, nil
+}
+
 // RefundStarPaymentConfig refunds a successful payment in Telegram Stars.
 // Returns True on success.
 type RefundStarPaymentConfig struct {
