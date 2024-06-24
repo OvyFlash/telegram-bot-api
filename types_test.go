@@ -308,6 +308,7 @@ var (
 	_ Chattable = FileConfig{}
 	_ Chattable = ForwardConfig{}
 	_ Chattable = GameConfig{}
+	_ Chattable = GetBusinessConnectionConfig{}
 	_ Chattable = GetChatMemberConfig{}
 	_ Chattable = GetChatMenuButtonConfig{}
 	_ Chattable = GetGameHighScoresConfig{}
@@ -324,6 +325,7 @@ var (
 	_ Chattable = PinChatMessageConfig{}
 	_ Chattable = PreCheckoutConfig{}
 	_ Chattable = PromoteChatMemberConfig{}
+	_ Chattable = ReplaceStickerInSetConfig{}
 	_ Chattable = RestrictChatMemberConfig{}
 	_ Chattable = RevokeChatInviteLinkConfig{}
 	_ Chattable = SendPollConfig{}
@@ -373,6 +375,7 @@ var (
 	_ Chattable = SetMyShortDescriptionConfig{}
 	_ Chattable = GetMyNameConfig{}
 	_ Chattable = SetMyNameConfig{}
+	_ Chattable = RefundStarPaymentConfig{}
 )
 
 // Ensure all Fileable types are correct.

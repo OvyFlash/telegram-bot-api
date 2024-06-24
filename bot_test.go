@@ -933,7 +933,7 @@ func TestUnpinAllChatMessages(t *testing.T) {
 func TestPolls(t *testing.T) {
 	bot, _ := getBot(t)
 
-	poll := NewPoll(SupergroupChatID, "Are polls working?", "Yes", "No")
+	poll := NewPoll(SupergroupChatID, "Are polls working?", NewPollOption("Yes"), NewPollOption("No"))
 
 	msg, err := bot.Send(poll)
 	if err != nil {
