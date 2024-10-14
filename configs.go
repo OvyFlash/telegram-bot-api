@@ -3265,6 +3265,14 @@ func prepareInputMediaParam(inputMedia interface{}, idx int) interface{} {
 		}
 
 		return m
+	case InputMediaAnimation:
+		if m.Media.NeedsUpload() {
+			m.Media = fileAttach(fmt.Sprintf("attach://file-%d", idx))
+		}
+
+		if m.Thumb != nil && m.Thumb.NeedsUpload() {
+			m.Thumb = fileAttach(fmt.Sprintf("attach://file-%d-thumb", idx))
+		}
 	case InputMediaDocument:
 		if m.Media.NeedsUpload() {
 			m.Media = fileAttach(fmt.Sprintf("attach://file-%d", idx))
@@ -3300,6 +3308,20 @@ func prepareInputMediaFile(inputMedia interface{}, idx int) []RequestFile {
 			})
 		}
 	case InputMediaVideo:
+		if m.Media.NeedsUpload() {
+			files = append(files, RequestFile{
+				Name: fmt.Sprintf("file-%d", idx),
+				Data: m.Media,
+			})
+		}
+
+		if m.Thumb != nil && m.Thumb.NeedsUpload() {
+			files = append(files, RequestFile{
+				Name: fmt.Sprintf("file-%d", idx),
+				Data: m.Thumb,
+			})
+		}
+	case InputMediaAnimation:
 		if m.Media.NeedsUpload() {
 			files = append(files, RequestFile{
 				Name: fmt.Sprintf("file-%d", idx),
