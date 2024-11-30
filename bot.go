@@ -23,14 +23,13 @@ type HTTPClient interface {
 
 // BotAPI allows you to interact with the Telegram Bot API.
 type BotAPI struct {
-	Token  string `json:"token"`
-	Debug  bool   `json:"debug"`
-	Buffer int    `json:"buffer"`
-
-	Self   User       `json:"-"`
-	Client HTTPClient `json:"-"`
-
-	apiEndpoint string
+	Token        string     `json:"token"`
+	Debug        bool       `json:"debug"`
+	Buffer       int        `json:"buffer"`
+	APIEndpoint  string     `json:"-"`
+	FileEndpoint string     `json:"-"`
+	Self         User       `json:"-"`
+	Client       HTTPClient `json:"-"`
 
 	stoppers []context.CancelFunc
 	mu       sync.RWMutex
@@ -40,7 +39,7 @@ type BotAPI struct {
 //
 // It requires a token, provided by @BotFather on Telegram.
 func NewBotAPI(token string) (*BotAPI, error) {
-	return NewBotAPIWithClient(token, APIEndpoint, &http.Client{})
+	return NewBotAPIWithClient(token, APIEndpoint, FileEndpoint, &http.Client{})
 }
 
 // NewBotAPIWithAPIEndpoint creates a new BotAPI instance
@@ -52,16 +51,16 @@ func NewBotAPIWithAPIEndpoint(token, apiEndpoint string) (*BotAPI, error) {
 }
 
 // NewBotAPIWithClient creates a new BotAPI instance
-// and allows you to pass a http.Client.
+// and allows you to pass a http.Client and endpoints.
 //
-// It requires a token, provided by @BotFather on Telegram and API endpoint.
-func NewBotAPIWithClient(token, apiEndpoint string, client HTTPClient) (*BotAPI, error) {
+// It requires a token, provided by @BotFather on Telegram.
+func NewBotAPIWithClient(token, apiEndpoint, fileEndpoint string, client HTTPClient) (*BotAPI, error) {
 	bot := &BotAPI{
-		Token:  token,
-		Client: client,
-		Buffer: 100,
-
-		apiEndpoint: apiEndpoint,
+		Token:        token,
+		Client:       client,
+		Buffer:       100,
+		APIEndpoint:  apiEndpoint,
+		FileEndpoint: fileEndpoint,
 	}
 
 	self, err := bot.GetMe()
@@ -273,17 +272,25 @@ func (bot *BotAPI) UploadFilesWithContext(ctx context.Context, endpoint string, 
 	return &apiResp, nil
 }
 
-// GetFileDirectURL returns direct URL to file
+// GetFile returns a File which can download a file from Telegram.
 //
-// It requires the FileID.
-func (bot *BotAPI) GetFileDirectURL(fileID string) (string, error) {
-	file, err := bot.GetFile(FileConfig{fileID})
-
-	if err != nil {
-		return "", err
+// Requires FileID.  Optionally takes a fileEndpoint.  If fileEndpoint is empty,
+// the default FileEndpoint is used.
+func (bot *BotAPI) GetFile(config FileConfig, fileEndpoint ...string) (File, error) {
+	endpointToUse := bot.FileEndpoint
+	if len(fileEndpoint) > 0 && fileEndpoint[0] != "" {
+		endpointToUse = fileEndpoint[0]
 	}
 
-	return file.Link(bot.Token), nil
+	resp, err := bot.MakeRequest(fmt.Sprintf(endpointToUse, bot.Token, "getFile"), config.params()) //Изменено: используем MakeRequest с новым endpoint
+	if err != nil {
+		return File{}, err
+	}
+
+	var file File
+	err = json.Unmarshal(resp.Result, &file)
+
+	return file, err
 }
 
 // GetMe fetches the currently authenticated bot.
