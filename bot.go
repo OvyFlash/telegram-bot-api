@@ -282,7 +282,7 @@ func (bot *BotAPI) GetFile(config FileConfig, fileEndpoint ...string) (File, err
 		endpointToUse = fileEndpoint[0]
 	}
 
-	resp, err := bot.MakeRequest(fmt.Sprintf(endpointToUse, bot.Token, "getFile"), config.params()) //Изменено: используем MakeRequest с новым endpoint
+	resp, err := bot.MakeRequest(fmt.Sprintf(endpointToUse, bot.Token, "getFile"), config.params())
 	if err != nil {
 		return File{}, err
 	}
