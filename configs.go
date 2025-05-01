@@ -330,8 +330,9 @@ func (config MessageConfig) method() string {
 // ForwardConfig contains information about a ForwardMessage request.
 type ForwardConfig struct {
 	BaseChat
-	FromChat  ChatConfig
-	MessageID int // required
+	FromChat            ChatConfig
+	MessageID           int // required
+	VideoStartTimestamp int64
 }
 
 func (config ForwardConfig) params() (Params, error) {
@@ -345,6 +346,7 @@ func (config ForwardConfig) params() (Params, error) {
 	}
 	params.Merge(p1)
 	params.AddNonZero("message_id", config.MessageID)
+	params.AddNonZero64("video_start_timestamp", config.VideoStartTimestamp)
 
 	return params, nil
 }
@@ -386,6 +388,7 @@ type CopyMessageConfig struct {
 	BaseChat
 	FromChat              ChatConfig
 	MessageID             int
+	VideoStartTimestamp   int64
 	Caption               string
 	ParseMode             string
 	CaptionEntities       []MessageEntity
@@ -404,6 +407,7 @@ func (config CopyMessageConfig) params() (Params, error) {
 	}
 	params.Merge(p1)
 	params.AddNonZero("message_id", config.MessageID)
+	params.AddNonZero64("video_start_timestamp", config.VideoStartTimestamp)
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
@@ -628,6 +632,8 @@ type VideoConfig struct {
 	BaseSpoiler
 	Thumb                 RequestFileData
 	Duration              int
+	Cover                 RequestFileData
+	StartTimestamp        int64
 	Caption               string
 	ParseMode             string
 	CaptionEntities       []MessageEntity
@@ -642,6 +648,7 @@ func (config VideoConfig) params() (Params, error) {
 	}
 
 	params.AddNonZero("duration", config.Duration)
+	params.AddNonZero64("start_timestamp", config.StartTimestamp)
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("supports_streaming", config.SupportsStreaming)
@@ -677,6 +684,12 @@ func (config VideoConfig) files() []RequestFile {
 		})
 	}
 
+	if config.Cover != nil {
+		files = append(files, RequestFile{
+			Name: "cover",
+			Data: config.Cover,
+		})
+	}
 	return files
 }
 

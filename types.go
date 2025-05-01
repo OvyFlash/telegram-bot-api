@@ -1484,6 +1484,16 @@ type Video struct {
 	//
 	// optional
 	Thumbnail *PhotoSize `json:"thumbnail,omitempty"`
+	// Cover is an array of available sizes of the cover
+	// of the video in the message
+	//
+	// optional
+	Cover []PhotoSize `json:"cover,omitempty"`
+	// StartTimestamp is the timestamp in seconds from
+	// which the video will play in the message
+	//
+	// optional
+	StartTimestamp int64 `json:"start_timestamp,omitempty"`
 	// FileName is the original filename as defined by sender
 	//
 	// optional
@@ -3614,6 +3624,14 @@ type InputMediaVideo struct {
 	//
 	// optional
 	Thumb RequestFileData `json:"thumbnail,omitempty"`
+	// Cover for the video in the message.
+	//
+	// optional
+	Cover string `json:"cover,omitempty"`
+	// StartTimestamp is the timestamp for the video in the message
+	//
+	// optional
+	StartTimestamp int64 `json:"start_timestamp,omitempty"`
 	// Width video width
 	//
 	// optional
@@ -3722,6 +3740,16 @@ type InputPaidMedia struct {
 	//
 	// optional
 	Thumb RequestFileData `json:"thumbnail"`
+	// InputPaidMediaVideo only.
+	// Cover for the video in the message.
+	//
+	// optional
+	Cover string `json:"cover,omitempty"`
+	// InputPaidMediaVideo only.
+	// StartTimestamp is the timestamp for the video in the message
+	//
+	// optional
+	StartTimestamp int64 `json:"start_timestamp,omitempty"`
 	// InputPaidMediaVideo only.
 	// Video width
 	//
@@ -5356,14 +5384,23 @@ type AffiliateInfo struct {
 type TransactionPartner struct {
 	// Type of the transaction partner. Must be one of:
 	//	- user
+	//  - chat
 	//  - affiliate_program
 	//	- fragment
 	//  - telegram_ads
 	//	- telegram_api
 	//  - other
 	Type string `json:"type"`
+	// Gift is the gift sent to the user by the bot;
+	// for “gift_purchase” transactions only
+	// Represent in "user" and "chat" state
+	//
+	// optional
+	Gift *Gift `json:"gift,omitempty"`
 	// TransactionPartnerUser payload for "user" type of transaction partner
 	TransactionPartnerUser
+	// TransactionPartnerChat payload for "chat" type of transaction partner
+	TransactionPartnerChat
 	// TransactionPartnerAffiliateProgram payload for "affiliate_program" type of transaction partner
 	TransactionPartnerAffiliateProgram
 	// TransactionPartnerFragment payload for "fragment" type of transaction partner
@@ -5398,12 +5435,12 @@ type TransactionPartnerUser struct {
 	//
 	// optional
 	PaidMedia []PaidMedia `json:"paid_media,omitempty"`
-	// Gift is the gift sent to the user by the bot;
-	// for “gift_purchase” transactions only
-	// Represent only in "user" state
-	//
-	// optional
-	Gift *Gift `json:"gift,omitempty"`
+}
+
+// TransactionPartnerChat describes a transaction with a chat.
+type TransactionPartnerChat struct {
+	// Chat is the information about the chat.
+	Chat Chat `json:"chat"`
 }
 
 // TransactionPartnerAffiliateProgram describes the affiliate program that
