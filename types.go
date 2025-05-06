@@ -1038,7 +1038,7 @@ type MessageEntity struct {
 	//  "pre" (monowidth block),
 	//  "text_link" (for clickable text URLs),
 	//  "text_mention" (for users without usernames)
-	//  "text_mention" (for inline custom emoji stickers)
+	//  "custom_emoji" (for inline custom emoji stickers)
 	Type string `json:"type"`
 	// Offset in UTF-16 code units to the start of the entity
 	Offset int `json:"offset"`
