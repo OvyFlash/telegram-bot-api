@@ -50,6 +50,15 @@ func getBot(t *testing.T) (*BotAPI, error) {
 	return bot, err
 }
 
+func TestBotWithCustomBuffer(t *testing.T) {
+	bot, _ := getBot(t)
+
+	customValue := 200
+	bot.SetUpdatesBuffer(customValue)
+
+	assertEq(t, bot.Buffer, customValue)
+}
+
 func TestNewBotAPI_notoken(t *testing.T) {
 	_, err := NewBotAPI("")
 

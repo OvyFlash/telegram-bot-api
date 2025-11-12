@@ -79,6 +79,11 @@ func (bot *BotAPI) SetAPIEndpoint(apiEndpoint string) {
 	bot.apiEndpoint = apiEndpoint
 }
 
+// SetAPIEndpoint changes the Telegram Bot API update chan buffer used by the instance.
+func (bot *BotAPI) SetUpdatesBuffer(capacity int) {
+	bot.Buffer = capacity
+}
+
 func buildParams(in Params) url.Values {
 	if in == nil {
 		return url.Values{}
