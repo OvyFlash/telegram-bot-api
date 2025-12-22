@@ -1,11 +1,9 @@
 package tgbotapi
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/url"
-	"os"
 	"strconv"
 )
 
@@ -175,15 +173,29 @@ type FileBytes struct {
 }
 
 func (fb FileBytes) NeedsUpload() bool {
-	return true
+	return fb.descriptor().kindIsUpload()
 }
 
 func (fb FileBytes) UploadData() (string, io.Reader, error) {
-	return fb.Name, bytes.NewReader(fb.Bytes), nil
+	desc, err := fb.descriptor().openUpload()
+	if err != nil {
+		return "", nil, err
+	}
+
+	return desc.name, desc.reader, nil
 }
 
 func (fb FileBytes) SendData() string {
-	panic("FileBytes must be uploaded")
+	value, err := fb.descriptor().referenceValue()
+	if err != nil {
+		return ""
+	}
+
+	return value
+}
+
+func (fb FileBytes) descriptor() fileSource {
+	return newBytesSource(fb.Name, fb.Bytes)
 }
 
 // FileReader contains information about a reader to upload as a File.
@@ -193,81 +205,145 @@ type FileReader struct {
 }
 
 func (fr FileReader) NeedsUpload() bool {
-	return true
+	return fr.descriptor().kindIsUpload()
 }
 
 func (fr FileReader) UploadData() (string, io.Reader, error) {
-	return fr.Name, fr.Reader, nil
+	desc, err := fr.descriptor().openUpload()
+	if err != nil {
+		return "", nil, err
+	}
+
+	return desc.name, desc.reader, nil
 }
 
 func (fr FileReader) SendData() string {
-	panic("FileReader must be uploaded")
+	value, err := fr.descriptor().referenceValue()
+	if err != nil {
+		return ""
+	}
+
+	return value
+}
+
+func (fr FileReader) descriptor() fileSource {
+	return newReaderSource(fr.Name, fr.Reader)
 }
 
 // FilePath is a path to a local file.
 type FilePath string
 
 func (fp FilePath) NeedsUpload() bool {
-	return true
+	return fp.descriptor().kindIsUpload()
 }
 
 func (fp FilePath) UploadData() (string, io.Reader, error) {
-	fileHandle, err := os.Open(string(fp))
+	desc, err := fp.descriptor().openUpload()
 	if err != nil {
 		return "", nil, err
 	}
 
-	name := fileHandle.Name()
-	return name, fileHandle, err
+	return desc.name, desc.reader, nil
 }
 
 func (fp FilePath) SendData() string {
-	panic("FilePath must be uploaded")
+	value, err := fp.descriptor().referenceValue()
+	if err != nil {
+		return ""
+	}
+
+	return value
+}
+
+func (fp FilePath) descriptor() fileSource {
+	return newPathSource(string(fp))
 }
 
 // FileURL is a URL to use as a file for a request.
 type FileURL string
 
 func (fu FileURL) NeedsUpload() bool {
-	return false
+	return fu.descriptor().kindIsUpload()
 }
 
 func (fu FileURL) UploadData() (string, io.Reader, error) {
-	panic("FileURL cannot be uploaded")
+	desc, err := fu.descriptor().openUpload()
+	if err != nil {
+		return "", nil, err
+	}
+
+	return desc.name, desc.reader, nil
 }
 
 func (fu FileURL) SendData() string {
-	return string(fu)
+	value, err := fu.descriptor().referenceValue()
+	if err != nil {
+		return ""
+	}
+
+	return value
+}
+
+func (fu FileURL) descriptor() fileSource {
+	return newURLSource(string(fu))
 }
 
 // FileID is an ID of a file already uploaded to Telegram.
 type FileID string
 
 func (fi FileID) NeedsUpload() bool {
-	return false
+	return fi.descriptor().kindIsUpload()
 }
 
 func (fi FileID) UploadData() (string, io.Reader, error) {
-	panic("FileID cannot be uploaded")
+	desc, err := fi.descriptor().openUpload()
+	if err != nil {
+		return "", nil, err
+	}
+
+	return desc.name, desc.reader, nil
 }
 
 func (fi FileID) SendData() string {
-	return string(fi)
+	value, err := fi.descriptor().referenceValue()
+	if err != nil {
+		return ""
+	}
+
+	return value
+}
+
+func (fi FileID) descriptor() fileSource {
+	return newFileIDSource(string(fi))
 }
 
 // fileAttach is an internal file type used for processed media groups.
 type fileAttach string
 
 func (fa fileAttach) NeedsUpload() bool {
-	return false
+	return fa.descriptor().kindIsUpload()
 }
 
 func (fa fileAttach) UploadData() (string, io.Reader, error) {
-	panic("fileAttach cannot be uploaded")
+	desc, err := fa.descriptor().openUpload()
+	if err != nil {
+		return "", nil, err
+	}
+
+	return desc.name, desc.reader, nil
 }
 
 func (fa fileAttach) SendData() string {
-	return string(fa)
+	value, err := fa.descriptor().referenceValue()
+	if err != nil {
+		return ""
+	}
+
+	return value
+}
+
+func (fa fileAttach) descriptor() fileSource {
+	return newAttachSource(string(fa))
 }
 
 // LogOutConfig is a request to log out of the cloud Bot API server.
@@ -489,19 +565,14 @@ func (config PhotoConfig) method() string {
 }
 
 func (config PhotoConfig) files() []RequestFile {
-	files := []RequestFile{{
-		Name: "photo",
-		Data: config.File,
-	}}
+	return config.filePayload().filesSlice()
+}
 
-	if config.Thumb != nil {
-		files = append(files, RequestFile{
-			Name: "thumbnail",
-			Data: config.Thumb,
-		})
-	}
-
-	return files
+func (config PhotoConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	payload.Add("photo", config.File)
+	payload.Add("thumbnail", config.Thumb)
+	return payload
 }
 
 // AudioConfig contains information about a SendAudio request.
@@ -537,19 +608,14 @@ func (config AudioConfig) method() string {
 }
 
 func (config AudioConfig) files() []RequestFile {
-	files := []RequestFile{{
-		Name: "audio",
-		Data: config.File,
-	}}
+	return config.filePayload().filesSlice()
+}
 
-	if config.Thumb != nil {
-		files = append(files, RequestFile{
-			Name: "thumbnail",
-			Data: config.Thumb,
-		})
-	}
-
-	return files
+func (config AudioConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	payload.Add("audio", config.File)
+	payload.Add("thumbnail", config.Thumb)
+	return payload
 }
 
 // DocumentConfig contains information about a SendDocument request.
@@ -584,19 +650,14 @@ func (config DocumentConfig) method() string {
 }
 
 func (config DocumentConfig) files() []RequestFile {
-	files := []RequestFile{{
-		Name: "document",
-		Data: config.File,
-	}}
+	return config.filePayload().filesSlice()
+}
 
-	if config.Thumb != nil {
-		files = append(files, RequestFile{
-			Name: "thumbnail",
-			Data: config.Thumb,
-		})
-	}
-
-	return files
+func (config DocumentConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	payload.Add("document", config.File)
+	payload.Add("thumbnail", config.Thumb)
+	return payload
 }
 
 // StickerConfig contains information about a SendSticker request.
@@ -620,10 +681,13 @@ func (config StickerConfig) method() string {
 }
 
 func (config StickerConfig) files() []RequestFile {
-	return []RequestFile{{
-		Name: "sticker",
-		Data: config.File,
-	}}
+	return config.filePayload().filesSlice()
+}
+
+func (config StickerConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	payload.Add("sticker", config.File)
+	return payload
 }
 
 // VideoConfig contains information about a SendVideo request.
@@ -672,25 +736,15 @@ func (config VideoConfig) method() string {
 }
 
 func (config VideoConfig) files() []RequestFile {
-	files := []RequestFile{{
-		Name: "video",
-		Data: config.File,
-	}}
+	return config.filePayload().filesSlice()
+}
 
-	if config.Thumb != nil {
-		files = append(files, RequestFile{
-			Name: "thumbnail",
-			Data: config.Thumb,
-		})
-	}
-
-	if config.Cover != nil {
-		files = append(files, RequestFile{
-			Name: "cover",
-			Data: config.Cover,
-		})
-	}
-	return files
+func (config VideoConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	payload.Add("video", config.File)
+	payload.Add("thumbnail", config.Thumb)
+	payload.Add("cover", config.Cover)
+	return payload
 }
 
 // AnimationConfig contains information about a SendAnimation request.
@@ -734,19 +788,14 @@ func (config AnimationConfig) method() string {
 }
 
 func (config AnimationConfig) files() []RequestFile {
-	files := []RequestFile{{
-		Name: "animation",
-		Data: config.File,
-	}}
+	return config.filePayload().filesSlice()
+}
 
-	if config.Thumb != nil {
-		files = append(files, RequestFile{
-			Name: "thumbnail",
-			Data: config.Thumb,
-		})
-	}
-
-	return files
+func (config AnimationConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	payload.Add("animation", config.File)
+	payload.Add("thumbnail", config.Thumb)
+	return payload
 }
 
 // VideoNoteConfig contains information about a SendVideoNote request.
@@ -771,19 +820,14 @@ func (config VideoNoteConfig) method() string {
 }
 
 func (config VideoNoteConfig) files() []RequestFile {
-	files := []RequestFile{{
-		Name: "video_note",
-		Data: config.File,
-	}}
+	return config.filePayload().filesSlice()
+}
 
-	if config.Thumb != nil {
-		files = append(files, RequestFile{
-			Name: "thumbnail",
-			Data: config.Thumb,
-		})
-	}
-
-	return files
+func (config VideoNoteConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	payload.Add("video_note", config.File)
+	payload.Add("thumbnail", config.Thumb)
+	return payload
 }
 
 // Use this method to send paid media to channel chats. On success, the sent Message is returned.
@@ -808,34 +852,35 @@ func (config PaidMediaConfig) params() (Params, error) {
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
 
-	media := []InputMedia{config.Media}
-	newMedia := prepareInputMediaForParams(media)
-	err = params.AddInterface("media", newMedia[0])
+	var payload uploadPayload
+
+	if config.Media != nil {
+		prepared, uploads := prepareInputMedia([]InputMedia{config.Media})
+		payload = uploads
+		err = params.AddInterface("media", prepared[0])
+	} else {
+		err = params.AddInterface("media", nil)
+	}
+
 	if err != nil {
 		return params, err
 	}
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
+	params = payload.applyInline(params)
 	return params, err
 }
 
 func (config PaidMediaConfig) files() []RequestFile {
-	files := []RequestFile{}
+	return config.filePayload().filesSlice()
+}
 
-	if config.Media.getMedia().NeedsUpload() {
-		files = append(files, RequestFile{
-			Name: "file-0",
-			Data: config.Media.getMedia(),
-		})
+func (config PaidMediaConfig) filePayload() uploadPayload {
+	if config.Media == nil {
+		return newUploadPayload()
 	}
 
-	if thumb := config.Media.getThumb(); thumb != nil && thumb.NeedsUpload() {
-		files = append(files, RequestFile{
-			Name: "file-0-thumb",
-			Data: thumb,
-		})
-	}
-
-	return files
+	_, payload := prepareInputMedia([]InputMedia{config.Media})
+	return payload
 }
 
 func (config PaidMediaConfig) method() string {
@@ -871,19 +916,14 @@ func (config VoiceConfig) method() string {
 }
 
 func (config VoiceConfig) files() []RequestFile {
-	files := []RequestFile{{
-		Name: "voice",
-		Data: config.File,
-	}}
+	return config.filePayload().filesSlice()
+}
 
-	if config.Thumb != nil {
-		files = append(files, RequestFile{
-			Name: "thumbnail",
-			Data: config.Thumb,
-		})
-	}
-
-	return files
+func (config VoiceConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	payload.Add("voice", config.File)
+	payload.Add("thumbnail", config.Thumb)
+	return payload
 }
 
 // LocationConfig contains information about a SendLocation request.
@@ -1240,15 +1280,25 @@ func (config EditMessageMediaConfig) params() (Params, error) {
 		return params, err
 	}
 
-	preparedMedia := prepareInputMediaForParams([]InputMedia{config.Media})
+	preparedMedia, payload := prepareInputMedia([]InputMedia{config.Media})
 
 	err = params.AddInterface("media", preparedMedia[0])
+	if err != nil {
+		return params, err
+	}
+
+	params = payload.applyInline(params)
 
 	return params, err
 }
 
 func (config EditMessageMediaConfig) files() []RequestFile {
-	return prepareInputMediaForFiles([]InputMedia{config.Media})
+	return config.filePayload().filesSlice()
+}
+
+func (config EditMessageMediaConfig) filePayload() uploadPayload {
+	_, payload := prepareInputMedia([]InputMedia{config.Media})
+	return payload
 }
 
 // EditMessageReplyMarkupConfig allows you to modify the reply markup
@@ -1418,14 +1468,13 @@ func (config WebhookConfig) params() (Params, error) {
 }
 
 func (config WebhookConfig) files() []RequestFile {
-	if config.Certificate != nil {
-		return []RequestFile{{
-			Name: "certificate",
-			Data: config.Certificate,
-		}}
-	}
+	return config.filePayload().filesSlice()
+}
 
-	return nil
+func (config WebhookConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	payload.Add("certificate", config.Certificate)
+	return payload
 }
 
 // DeleteWebhookConfig is a helper to delete a webhook.
@@ -2517,10 +2566,13 @@ func (config SetChatPhotoConfig) method() string {
 }
 
 func (config SetChatPhotoConfig) files() []RequestFile {
-	return []RequestFile{{
-		Name: "photo",
-		Data: config.File,
-	}}
+	return config.filePayload().filesSlice()
+}
+
+func (config SetChatPhotoConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	payload.Add("photo", config.File)
+	return payload
 }
 
 // DeleteChatPhotoConfig allows you to delete a group, supergroup, or channel's photo.
@@ -2634,7 +2686,13 @@ func (config UploadStickerConfig) params() (Params, error) {
 }
 
 func (config UploadStickerConfig) files() []RequestFile {
-	return []RequestFile{config.Sticker}
+	return config.filePayload().filesSlice()
+}
+
+func (config UploadStickerConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	payload.Add(config.Sticker.Name, config.Sticker.Data)
+	return payload
 }
 
 // NewStickerSetConfig allows creating a new sticker set.
@@ -2666,11 +2724,15 @@ func (config NewStickerSetConfig) params() (Params, error) {
 }
 
 func (config NewStickerSetConfig) files() []RequestFile {
-	requestFiles := []RequestFile{}
-	for _, v := range config.Stickers {
-		requestFiles = append(requestFiles, v.Sticker)
+	return config.filePayload().filesSlice()
+}
+
+func (config NewStickerSetConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	for _, sticker := range config.Stickers {
+		payload.Add(sticker.Sticker.Name, sticker.Sticker.Data)
 	}
-	return requestFiles
+	return payload
 }
 
 // AddStickerConfig allows you to add a sticker to a set.
@@ -2694,7 +2756,13 @@ func (config AddStickerConfig) params() (Params, error) {
 }
 
 func (config AddStickerConfig) files() []RequestFile {
-	return []RequestFile{config.Sticker.Sticker}
+	return config.filePayload().filesSlice()
+}
+
+func (config AddStickerConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	payload.Add(config.Sticker.Sticker.Name, config.Sticker.Sticker.Data)
+	return payload
 }
 
 // SetStickerPositionConfig allows you to change the position of a sticker in a set.
@@ -2896,10 +2964,13 @@ func (config SetStickerSetThumbConfig) params() (Params, error) {
 }
 
 func (config SetStickerSetThumbConfig) files() []RequestFile {
-	return []RequestFile{{
-		Name: "thumbnail",
-		Data: config.Thumb,
-	}}
+	return config.filePayload().filesSlice()
+}
+
+func (config SetStickerSetThumbConfig) filePayload() uploadPayload {
+	payload := newUploadPayload()
+	payload.Add("thumbnail", config.Thumb)
+	return payload
 }
 
 // SetChatStickerSetConfig allows you to set the sticker set for a supergroup.
@@ -3139,13 +3210,25 @@ func (config MediaGroupConfig) params() (Params, error) {
 		return nil, err
 	}
 
-	err = params.AddInterface("media", prepareInputMediaForParams(config.Media))
+	preparedMedia, payload := prepareInputMedia(config.Media)
+
+	err = params.AddInterface("media", preparedMedia)
+	if err != nil {
+		return params, err
+	}
+
+	params = payload.applyInline(params)
 
 	return params, err
 }
 
 func (config MediaGroupConfig) files() []RequestFile {
-	return prepareInputMediaForFiles(config.Media)
+	return config.filePayload().filesSlice()
+}
+
+func (config MediaGroupConfig) filePayload() uploadPayload {
+	_, payload := prepareInputMedia(config.Media)
+	return payload
 }
 
 // DiceConfig contains information about a sendDice request.
@@ -3487,47 +3570,51 @@ func (config GetMyDefaultAdministratorRightsConfig) params() (Params, error) {
 	return params, nil
 }
 
-// prepareInputMediaForParams processes media items for API parameters.
-// It creates a copy of the media array with files prepared for upload.
-func prepareInputMediaForParams(inputMedia []InputMedia) []InputMedia {
-	newMedias := cloneMediaSlice(inputMedia)
-	for idx, media := range newMedias {
-		if media.getMedia().NeedsUpload() {
-			media.setUploadMedia(fmt.Sprintf("attach://file-%d", idx))
+// prepareInputMedia normalizes media payloads and gathers uploadable files.
+func prepareInputMedia(inputMedia []InputMedia) ([]InputMedia, uploadPayload) {
+	prepared := cloneMediaSlice(inputMedia)
+	payload := newUploadPayload()
+
+	for idx, media := range prepared {
+		if media == nil {
+			continue
 		}
 
-		if thumb := media.getThumb(); thumb != nil && thumb.NeedsUpload() {
-			media.setUploadThumb(fmt.Sprintf("attach://file-%d-thumb", idx))
-		}
-
-		newMedias[idx] = media
-	}
-
-	return newMedias
-}
-
-// prepareInputMediaForFiles generates RequestFile objects for media items
-// that need to be uploaded.
-func prepareInputMediaForFiles(inputMedia []InputMedia) []RequestFile {
-	files := []RequestFile{}
-
-	for idx, media := range inputMedia {
-		if media.getMedia() != nil && media.getMedia().NeedsUpload() {
-			files = append(files, RequestFile{
-				Name: fmt.Sprintf("file-%d", idx),
-				Data: media.getMedia(),
+		fileRef := media.getMedia()
+		if fileRef != nil && fileRef.NeedsUpload() {
+			name := fmt.Sprintf("file-%d", idx)
+			media.setUploadMedia(fmt.Sprintf("attach://%s", name))
+			payload.files = append(payload.files, RequestFile{
+				Name: name,
+				Data: fileRef,
 			})
 		}
 
 		if thumb := media.getThumb(); thumb != nil && thumb.NeedsUpload() {
-			files = append(files, RequestFile{
-				Name: fmt.Sprintf("file-%d-thumb", idx),
+			name := fmt.Sprintf("file-%d-thumb", idx)
+			media.setUploadThumb(fmt.Sprintf("attach://%s", name))
+			payload.files = append(payload.files, RequestFile{
+				Name: name,
 				Data: thumb,
 			})
 		}
+
+		prepared[idx] = media
 	}
 
-	return files
+	return prepared, payload
+}
+
+// prepareInputMediaForParams processes media items for API parameters.
+func prepareInputMediaForParams(inputMedia []InputMedia) []InputMedia {
+	prepared, _ := prepareInputMedia(inputMedia)
+	return prepared
+}
+
+// prepareInputMediaForFiles generates RequestFile objects for media items.
+func prepareInputMediaForFiles(inputMedia []InputMedia) []RequestFile {
+	_, payload := prepareInputMedia(inputMedia)
+	return payload.filesSlice()
 }
 
 func ptr[T any](v T) *T {
