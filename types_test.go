@@ -1,6 +1,7 @@
 package tgbotapi
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 )
@@ -39,6 +40,39 @@ func TestMessageTime(t *testing.T) {
 
 	date := time.Unix(0, 0)
 	if message.Time() != date {
+		t.Fail()
+	}
+}
+
+func TestMessageTimeAfter2038(t *testing.T) {
+	const messageUnixDate int64 = 2208988800
+	message := Message{Date: messageUnixDate}
+
+	date := time.Unix(messageUnixDate, 0)
+	if message.Time() != date {
+		t.Fail()
+	}
+}
+
+func TestMessageUnmarshalDateAfter2038(t *testing.T) {
+	const body = `{"message_id":1,"date":2208988800,"chat":{"id":1,"type":"private"}}`
+
+	var message Message
+	if err := json.Unmarshal([]byte(body), &message); err != nil {
+		t.Fatal(err)
+	}
+
+	if message.Date != 2208988800 {
+		t.Fatalf("incorrect date: %d", message.Date)
+	}
+}
+
+func TestVideoChatScheduledTimeAfter2038(t *testing.T) {
+	const startDate int64 = 2208988800
+	scheduled := VideoChatScheduled{StartDate: startDate}
+
+	date := time.Unix(startDate, 0)
+	if scheduled.Time() != date {
 		t.Fail()
 	}
 }

@@ -583,7 +583,7 @@ type InaccessibleMessage struct {
 	// MessageID is unique message identifier inside the chat
 	MessageID int `json:"message_id"`
 	// Date is always 0. The field can be used to differentiate regular and inaccessible messages.
-	Date int `json:"date"`
+	Date int64 `json:"date"`
 }
 
 // Message represents a message.
@@ -622,7 +622,7 @@ type Message struct {
 	// optional
 	SenderBusinessBot *User `json:"sender_business_bot,omitempty"`
 	// Date of the message was sent in Unix time
-	Date int `json:"date"`
+	Date int64 `json:"date"`
 	// BusinessConnectionID is an unique identifier of the business connection
 	// from which the message was received. If non-empty, the message belongs to
 	// a chat of the corresponding business account that is independent from
@@ -675,7 +675,7 @@ type Message struct {
 	// EditDate of the message was last edited in Unix time;
 	//
 	// optional
-	EditDate int `json:"edit_date,omitempty"`
+	EditDate int64 `json:"edit_date,omitempty"`
 	// HasProtectedContent is true if the message can't be forwarded.
 	//
 	// optional
@@ -1058,7 +1058,7 @@ type Message struct {
 
 // Time converts the message timestamp into a Time.
 func (m *Message) Time() time.Time {
-	return time.Unix(int64(m.Date), 0)
+	return time.Unix(m.Date, 0)
 }
 
 // IsCommand returns true if message starts with a "bot_command" entity.
@@ -1843,7 +1843,7 @@ type Poll struct {
 	// automatically closed
 	//
 	// optional
-	CloseDate int `json:"close_date,omitempty"`
+	CloseDate int64 `json:"close_date,omitempty"`
 }
 
 // Location represents a point on the map.
@@ -2144,12 +2144,12 @@ type WriteAccessAllowed struct {
 type VideoChatScheduled struct {
 	// Point in time (Unix timestamp) when the voice chat is supposed to be
 	// started by a chat administrator
-	StartDate int `json:"start_date"`
+	StartDate int64 `json:"start_date"`
 }
 
 // Time converts the scheduled start date into a Time.
 func (m *VideoChatScheduled) Time() time.Time {
-	return time.Unix(int64(m.StartDate), 0)
+	return time.Unix(m.StartDate, 0)
 }
 
 // VideoChatStarted represents a service message about a voice chat started in
@@ -2842,7 +2842,7 @@ type ChatInviteLink struct {
 	// expire or has been expired.
 	//
 	// optional
-	ExpireDate int `json:"expire_date,omitempty"`
+	ExpireDate int64 `json:"expire_date,omitempty"`
 	// MemberLimit is the maximum number of users that can be members of the
 	// chat simultaneously after joining the chat via this invite link; 1-99999.
 	//
@@ -3100,7 +3100,7 @@ type ChatMemberUpdated struct {
 	// From is the performer of the action, which resulted in the change.
 	From User `json:"from"`
 	// Date the change was done in Unix time.
-	Date int `json:"date"`
+	Date int64 `json:"date"`
 	// Previous information about the chat member.
 	OldChatMember ChatMember `json:"old_chat_member"`
 	// New information about the chat member.
@@ -3132,7 +3132,7 @@ type ChatJoinRequest struct {
 	// UserChatID identifier of a private chat with the user who sent the join request.
 	UserChatID int64 `json:"user_chat_id"`
 	// Date the request was sent in Unix time.
-	Date int `json:"date"`
+	Date int64 `json:"date"`
 	// Bio of the user.
 	//
 	// optional
@@ -4193,7 +4193,7 @@ type WebhookInfo struct {
 	// that happened when trying to deliver an update via webhook.
 	//
 	// optional
-	LastErrorDate int `json:"last_error_date,omitempty"`
+	LastErrorDate int64 `json:"last_error_date,omitempty"`
 	// LastErrorMessage error message in human-readable format for the most recent error
 	// that happened when trying to deliver an update via webhook.
 	//
@@ -4201,7 +4201,7 @@ type WebhookInfo struct {
 	LastErrorMessage string `json:"last_error_message,omitempty"`
 	// LastSynchronizationErrorDate is the unix time of the most recent error that
 	// happened when trying to synchronize available updates with Telegram datacenters.
-	LastSynchronizationErrorDate int `json:"last_synchronization_error_date,omitempty"`
+	LastSynchronizationErrorDate int64 `json:"last_synchronization_error_date,omitempty"`
 	// MaxConnections maximum allowed number of simultaneous
 	// HTTPS connections to the webhook for update delivery.
 	//

@@ -6,6 +6,77 @@ import (
 	"testing"
 )
 
+func TestSendPollConfigCloseDate64BitParam(t *testing.T) {
+	config := SendPollConfig{
+		BaseChat: BaseChat{
+			ChatConfig: ChatConfig{ChatID: 1},
+		},
+		Question:  "q",
+		Options:   []InputPollOption{{Text: "a"}},
+		CloseDate: 2208988800,
+	}
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	if params["close_date"] != "2208988800" {
+		t.Fatalf("close_date mismatch: %s", params["close_date"])
+	}
+}
+
+func TestBanChatSenderChatConfigUntilDate64BitParam(t *testing.T) {
+	config := BanChatSenderChatConfig{
+		ChatConfig:   ChatConfig{ChatID: 1},
+		SenderChatID: 2,
+		UntilDate:    2208988800,
+	}
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	if params["until_date"] != "2208988800" {
+		t.Fatalf("until_date mismatch: %s", params["until_date"])
+	}
+}
+
+func TestCreateChatInviteLinkConfigExpireDate64BitParam(t *testing.T) {
+	config := CreateChatInviteLinkConfig{
+		ChatConfig: ChatConfig{ChatID: 1},
+		Name:       "name",
+		ExpireDate: 2208988800,
+	}
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	if params["expire_date"] != "2208988800" {
+		t.Fatalf("expire_date mismatch: %s", params["expire_date"])
+	}
+}
+
+func TestEditChatInviteLinkConfigExpireDate64BitParam(t *testing.T) {
+	config := EditChatInviteLinkConfig{
+		ChatConfig: ChatConfig{ChatID: 1},
+		InviteLink: "https://t.me/+abc",
+		ExpireDate: 2208988800,
+	}
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	if params["expire_date"] != "2208988800" {
+		t.Fatalf("expire_date mismatch: %s", params["expire_date"])
+	}
+}
+
 func TestPrepareInputMediaForParams(t *testing.T) {
 	tests := []struct {
 		name               string

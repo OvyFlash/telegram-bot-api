@@ -1077,7 +1077,7 @@ type SendPollConfig struct {
 	ExplanationParseMode  string
 	ExplanationEntities   []MessageEntity
 	OpenPeriod            int
-	CloseDate             int
+	CloseDate             int64
 	IsClosed              bool
 }
 
@@ -1103,7 +1103,7 @@ func (config SendPollConfig) params() (Params, error) {
 	params.AddNonEmpty("explanation", config.Explanation)
 	params.AddNonEmpty("explanation_parse_mode", config.ExplanationParseMode)
 	params.AddNonZero("open_period", config.OpenPeriod)
-	params.AddNonZero("close_date", config.CloseDate)
+	params.AddNonZero64("close_date", config.CloseDate)
 	err = params.AddInterface("explanation_entities", config.ExplanationEntities)
 
 	return params, err
@@ -1879,7 +1879,7 @@ func (config SetChatAdministratorCustomTitle) params() (Params, error) {
 type BanChatSenderChatConfig struct {
 	ChatConfig
 	SenderChatID int64
-	UntilDate    int
+	UntilDate    int64
 }
 
 func (config BanChatSenderChatConfig) method() string {
@@ -1892,7 +1892,7 @@ func (config BanChatSenderChatConfig) params() (Params, error) {
 		return params, err
 	}
 	params.AddNonZero64("sender_chat_id", config.SenderChatID)
-	params.AddNonZero("until_date", config.UntilDate)
+	params.AddNonZero64("until_date", config.UntilDate)
 
 	return params, nil
 }
@@ -1993,7 +1993,7 @@ func (config ChatInviteLinkConfig) params() (Params, error) {
 type CreateChatInviteLinkConfig struct {
 	ChatConfig
 	Name               string
-	ExpireDate         int
+	ExpireDate         int64
 	MemberLimit        int
 	CreatesJoinRequest bool
 }
@@ -2009,7 +2009,7 @@ func (config CreateChatInviteLinkConfig) params() (Params, error) {
 	}
 
 	params.AddNonEmpty("name", config.Name)
-	params.AddNonZero("expire_date", config.ExpireDate)
+	params.AddNonZero64("expire_date", config.ExpireDate)
 	params.AddNonZero("member_limit", config.MemberLimit)
 	params.AddBool("creates_join_request", config.CreatesJoinRequest)
 
@@ -2023,7 +2023,7 @@ type EditChatInviteLinkConfig struct {
 	ChatConfig
 	InviteLink         string
 	Name               string
-	ExpireDate         int
+	ExpireDate         int64
 	MemberLimit        int
 	CreatesJoinRequest bool
 }
@@ -2040,7 +2040,7 @@ func (config EditChatInviteLinkConfig) params() (Params, error) {
 
 	params.AddNonEmpty("name", config.Name)
 	params["invite_link"] = config.InviteLink
-	params.AddNonZero("expire_date", config.ExpireDate)
+	params.AddNonZero64("expire_date", config.ExpireDate)
 	params.AddNonZero("member_limit", config.MemberLimit)
 	params.AddBool("creates_join_request", config.CreatesJoinRequest)
 
