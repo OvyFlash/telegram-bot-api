@@ -85,3 +85,39 @@ are all changed into `attach://file-%d`. When collecting a list of files to
 upload, it names them the same way. This creates a nearly transparent way of
 handling multiple files in the background without the user having to consider
 what's going on.
+
+## Nested Upload Objects
+
+Bot API 9.4 introduces upload-capable nested objects like `InputProfilePhoto`
+and `InputStoryContent`. These are handled using the same `attach://` strategy
+as media groups:
+
+- Uploaded payload reference in params: `attach://file-0`
+- Multipart field name in files list: `file-0`
+- Original caller object is cloned before rewrite, so the input struct is not mutated
+
+### Example: setMyProfilePhoto
+
+```go
+photo := tgbotapi.InputProfilePhotoStatic{
+	Type:  "static",
+	Photo: tgbotapi.FilePath("tests/profile.jpg"),
+}
+
+cfg := tgbotapi.NewSetMyProfilePhoto(&photo)
+params, _ := cfg.params() // params["photo"] contains attach://file-0
+files := cfg.files()      // files[0].Name == "file-0"
+```
+
+### Example: postStory
+
+```go
+content := tgbotapi.InputStoryContentPhoto{
+	Type:  "photo",
+	Photo: tgbotapi.FilePath("tests/story.jpg"),
+}
+
+cfg := tgbotapi.NewPostStory("business-connection-id", &content, 86400)
+params, _ := cfg.params() // params["content"] contains attach://file-0
+files := cfg.files()      // files[0].Name == "file-0"
+```

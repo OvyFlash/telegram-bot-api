@@ -4,30 +4,59 @@ on:
   push:
     branches:
       - master
-      - develop
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
-    name: Test
+  test:
+    name: Go Test
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Go 1.23
-      uses: actions/setup-go@v5
-      with:
-        go-version: "1.23"
-      id: go
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
 
-    - name: Build
-      run: go build -v .
+      - name: Verify module tidy state
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
 
-    - name: Test
-      run: go test -coverprofile=coverage.out -covermode=atomic -v .
+      - name: Vet
+        run: go vet ./...
 
-    - name: Upload coverage report
-      uses: codecov/codecov-action@v1
-      with:
-        file: ./coverage.out
+      - name: Test
+        run: go test -race -shuffle=on -count=1 -timeout=10m ./...
+
+  api-parity:
+    name: API Parity
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Download API spec
+        run: |
+          curl --fail --location --retry 3 --retry-delay 2 \
+            --output api.json \
+            https://raw.githubusercontent.com/PaulSonOfLars/telegram-bot-api-spec/main/api.json
+
+      - name: Run API parity tests
+        run: go test -tags api_parity -run '^TestAPIParity' -v .

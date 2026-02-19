@@ -385,6 +385,45 @@ func (bot *BotAPI) SendMediaGroup(config MediaGroupConfig) ([]Message, error) {
 	return messages, err
 }
 
+// PostStory posts a story on behalf of a managed business account.
+func (bot *BotAPI) PostStory(config PostStoryConfig) (Story, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return Story{}, err
+	}
+
+	var story Story
+	err = json.Unmarshal(resp.Result, &story)
+
+	return story, err
+}
+
+// EditStory edits a story posted by a managed business account.
+func (bot *BotAPI) EditStory(config EditStoryConfig) (Story, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return Story{}, err
+	}
+
+	var story Story
+	err = json.Unmarshal(resp.Result, &story)
+
+	return story, err
+}
+
+// RepostStory reposts a story to a managed business account.
+func (bot *BotAPI) RepostStory(config RepostStoryConfig) (Story, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return Story{}, err
+	}
+
+	var story Story
+	err = json.Unmarshal(resp.Result, &story)
+
+	return story, err
+}
+
 // GetUserProfilePhotos gets a user's profile photos.
 //
 // It requires UserID.
@@ -399,6 +438,19 @@ func (bot *BotAPI) GetUserProfilePhotos(config UserProfilePhotosConfig) (UserPro
 	err = json.Unmarshal(resp.Result, &profilePhotos)
 
 	return profilePhotos, err
+}
+
+// GetUserProfileAudios gets a user's profile audios.
+func (bot *BotAPI) GetUserProfileAudios(config UserProfileAudiosConfig) (UserProfileAudios, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return UserProfileAudios{}, err
+	}
+
+	var profileAudios UserProfileAudios
+	err = json.Unmarshal(resp.Result, &profileAudios)
+
+	return profileAudios, err
 }
 
 // GetFile returns a File which can download a file from Telegram.
@@ -623,8 +675,8 @@ func (bot *BotAPI) GetChatAdministrators(config ChatAdministratorsConfig) ([]Cha
 	return members, err
 }
 
-// GetChatMembersCount gets the number of users in a chat.
-func (bot *BotAPI) GetChatMembersCount(config ChatMemberCountConfig) (int, error) {
+// GetChatMemberCount gets the number of users in a chat.
+func (bot *BotAPI) GetChatMemberCount(config ChatMemberCountConfig) (int, error) {
 	resp, err := bot.Request(config)
 	if err != nil {
 		return -1, err
@@ -634,6 +686,11 @@ func (bot *BotAPI) GetChatMembersCount(config ChatMemberCountConfig) (int, error
 	err = json.Unmarshal(resp.Result, &count)
 
 	return count, err
+}
+
+// GetChatMembersCount gets the number of users in a chat.
+func (bot *BotAPI) GetChatMembersCount(config ChatMemberCountConfig) (int, error) {
+	return bot.GetChatMemberCount(config)
 }
 
 // GetChatMember gets a specific chat member.
@@ -673,6 +730,71 @@ func (bot *BotAPI) GetInviteLink(config ChatInviteLinkConfig) (string, error) {
 	err = json.Unmarshal(resp.Result, &inviteLink)
 
 	return inviteLink, err
+}
+
+// GetMyStarBalance gets the current Telegram Stars balance of the bot.
+func (bot *BotAPI) GetMyStarBalance(config GetMyStarBalanceConfig) (StarAmount, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return StarAmount{}, err
+	}
+
+	var balance StarAmount
+	err = json.Unmarshal(resp.Result, &balance)
+
+	return balance, err
+}
+
+// GetBusinessAccountStarBalance gets the Telegram Stars balance of a business account.
+func (bot *BotAPI) GetBusinessAccountStarBalance(config GetBusinessAccountStarBalanceConfig) (StarAmount, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return StarAmount{}, err
+	}
+
+	var balance StarAmount
+	err = json.Unmarshal(resp.Result, &balance)
+
+	return balance, err
+}
+
+// GetBusinessAccountGifts gets gifts owned by a business account.
+func (bot *BotAPI) GetBusinessAccountGifts(config GetBusinessAccountGiftsConfig) (OwnedGifts, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return OwnedGifts{}, err
+	}
+
+	var gifts OwnedGifts
+	err = json.Unmarshal(resp.Result, &gifts)
+
+	return gifts, err
+}
+
+// GetUserGifts gets gifts owned by a user.
+func (bot *BotAPI) GetUserGifts(config GetUserGiftsConfig) (OwnedGifts, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return OwnedGifts{}, err
+	}
+
+	var gifts OwnedGifts
+	err = json.Unmarshal(resp.Result, &gifts)
+
+	return gifts, err
+}
+
+// GetChatGifts gets gifts owned by a chat.
+func (bot *BotAPI) GetChatGifts(config GetChatGiftsConfig) (OwnedGifts, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return OwnedGifts{}, err
+	}
+
+	var gifts OwnedGifts
+	err = json.Unmarshal(resp.Result, &gifts)
+
+	return gifts, err
 }
 
 // CreateInvoiceLink Use this method to create a link for an invoice. Returns the created invoice link as

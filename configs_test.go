@@ -2,6 +2,7 @@ package tgbotapi
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -718,6 +719,211 @@ func TestCloneMediaSlice(t *testing.T) {
 				t.Errorf("Expected deep copy, but caption was modified in original")
 			}
 		}
+	}
+}
+
+func TestPrepareInputProfilePhotoForParams(t *testing.T) {
+	photo := &InputProfilePhotoStatic{
+		Type:  "static",
+		Photo: FilePath("tests/profile.jpg"),
+	}
+
+	prepared := prepareInputProfilePhotoForParams(photo)
+	if prepared == nil {
+		t.Fatalf("expected prepared profile photo")
+	}
+	if prepared == photo {
+		t.Fatalf("expected prepared profile photo to be cloned")
+	}
+	if prepared.getMedia().SendData() != "attach://file-0" {
+		t.Fatalf("expected attach reference, got %q", prepared.getMedia().SendData())
+	}
+	if _, ok := photo.Photo.(FilePath); !ok {
+		t.Fatalf("expected original profile photo to remain unchanged")
+	}
+}
+
+func TestPrepareInputProfilePhotoForFiles(t *testing.T) {
+	files := prepareInputProfilePhotoForFiles(&InputProfilePhotoStatic{
+		Type:  "static",
+		Photo: FilePath("tests/profile.jpg"),
+	})
+	if len(files) != 1 {
+		t.Fatalf("expected one file, got %d", len(files))
+	}
+	if files[0].Name != "file-0" {
+		t.Fatalf("expected file name file-0, got %q", files[0].Name)
+	}
+
+	files = prepareInputProfilePhotoForFiles(&InputProfilePhotoStatic{
+		Type:  "static",
+		Photo: FileID("existing-profile"),
+	})
+	if len(files) != 0 {
+		t.Fatalf("expected no files for existing file id, got %d", len(files))
+	}
+}
+
+func TestPrepareInputStoryContentForParams(t *testing.T) {
+	content := &InputStoryContentVideo{
+		Type:  "video",
+		Video: FilePath("tests/story.mp4"),
+	}
+
+	prepared := prepareInputStoryContentForParams(content)
+	if prepared == nil {
+		t.Fatalf("expected prepared story content")
+	}
+	if prepared == content {
+		t.Fatalf("expected prepared story content to be cloned")
+	}
+	if prepared.getMedia().SendData() != "attach://file-0" {
+		t.Fatalf("expected attach reference, got %q", prepared.getMedia().SendData())
+	}
+	if _, ok := content.Video.(FilePath); !ok {
+		t.Fatalf("expected original story content to remain unchanged")
+	}
+}
+
+func TestPrepareInputStoryContentForFiles(t *testing.T) {
+	files := prepareInputStoryContentForFiles(&InputStoryContentVideo{
+		Type:  "video",
+		Video: FilePath("tests/story.mp4"),
+	})
+	if len(files) != 1 {
+		t.Fatalf("expected one file, got %d", len(files))
+	}
+	if files[0].Name != "file-0" {
+		t.Fatalf("expected file name file-0, got %q", files[0].Name)
+	}
+
+	files = prepareInputStoryContentForFiles(&InputStoryContentVideo{
+		Type:  "video",
+		Video: FileURL("https://example.com/story.mp4"),
+	})
+	if len(files) != 0 {
+		t.Fatalf("expected no files for url source, got %d", len(files))
+	}
+}
+
+func TestSetMyProfilePhotoConfigUploadSerialization(t *testing.T) {
+	photo := &InputProfilePhotoStatic{
+		Type:  "static",
+		Photo: FilePath("tests/profile.jpg"),
+	}
+	config := SetMyProfilePhotoConfig{
+		Photo: photo,
+	}
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params error: %v", err)
+	}
+	if params["photo"] == "" {
+		t.Fatalf("expected photo param to be present")
+	}
+	if !strings.Contains(params["photo"], "attach://file-0") {
+		t.Fatalf("expected photo param to contain attach reference, got %q", params["photo"])
+	}
+
+	files := config.files()
+	if len(files) != 1 || files[0].Name != "file-0" {
+		t.Fatalf("unexpected files payload: %+v", files)
+	}
+	if _, ok := photo.Photo.(FilePath); !ok {
+		t.Fatalf("expected original photo to remain unchanged")
+	}
+}
+
+func TestPostStoryConfigUploadSerialization(t *testing.T) {
+	content := &InputStoryContentPhoto{
+		Type:  "photo",
+		Photo: FilePath("tests/story.jpg"),
+	}
+	config := PostStoryConfig{
+		BusinessConnectionID: "business",
+		Content:              content,
+		ActivePeriod:         86400,
+	}
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params error: %v", err)
+	}
+	if params["content"] == "" {
+		t.Fatalf("expected content param to be present")
+	}
+	if !strings.Contains(params["content"], "attach://file-0") {
+		t.Fatalf("expected content param to contain attach reference, got %q", params["content"])
+	}
+
+	files := config.files()
+	if len(files) != 1 || files[0].Name != "file-0" {
+		t.Fatalf("unexpected files payload: %+v", files)
+	}
+	if _, ok := content.Photo.(FilePath); !ok {
+		t.Fatalf("expected original story content to remain unchanged")
+	}
+}
+
+func TestAPIParityRegressionFixes(t *testing.T) {
+	setGameScore := SetGameScoreConfig{
+		BaseChatMessage: BaseChatMessage{
+			ChatConfig: ChatConfig{
+				ChatID: 123,
+			},
+			MessageID: 456,
+		},
+		UserID: 111,
+		Score:  42,
+		Force:  true,
+	}
+	params, err := setGameScore.params()
+	if err != nil {
+		t.Fatalf("setGameScore params error: %v", err)
+	}
+	if params["score"] != "42" {
+		t.Fatalf("expected score param, got %#v", params)
+	}
+	if _, ok := params["scrore"]; ok {
+		t.Fatalf("unexpected legacy typo key in params")
+	}
+	if params["force"] != "true" {
+		t.Fatalf("expected force param, got %#v", params)
+	}
+
+	emojiStatus := SetUserEmojiStatusConfig{
+		UserID:                    999,
+		EmojiStatusExpirationDate: 123456,
+	}
+	params, err = emojiStatus.params()
+	if err != nil {
+		t.Fatalf("setUserEmojiStatus params error: %v", err)
+	}
+	if params["emoji_status_expiration_date"] != "123456" {
+		t.Fatalf("expected emoji_status_expiration_date param, got %#v", params)
+	}
+	if _, ok := params["emoji_status_expiration_date\t"]; ok {
+		t.Fatalf("unexpected malformed emoji status key in params")
+	}
+
+	sendGift := SendGiftConfig{
+		UserID:        42,
+		Chat:          ChatConfig{ChatID: 4242},
+		GiftID:        "gift-id",
+		Text:          "hello",
+		TextParseMode: "MarkdownV2",
+	}
+	params, err = sendGift.params()
+	if err != nil {
+		t.Fatalf("sendGift params error: %v", err)
+	}
+	if params["text_parse_mode"] != "MarkdownV2" {
+		t.Fatalf("expected text_parse_mode from TextParseMode field, got %#v", params)
+	}
+
+	if got := (ChatMemberCountConfig{}).method(); got != "getChatMemberCount" {
+		t.Fatalf("expected getChatMemberCount method, got %q", got)
 	}
 }
 

@@ -19,14 +19,16 @@ func (base ChatConfig) paramsWithKey(key string) (Params, error) {
 // BaseChat is base type for all chat config types.
 type BaseChat struct {
 	ChatConfig
-	BusinessConnectionID BusinessConnectionID
-	MessageThreadID      int
-	ProtectContent       bool
-	ReplyMarkup          interface{}
-	DisableNotification  bool
-	AllowPaidBroadcast   bool
-	MessageEffectID      string // for private chats only
-	ReplyParameters      ReplyParameters
+	BusinessConnectionID    BusinessConnectionID
+	MessageThreadID         int
+	DirectMessagesTopicID   int
+	ProtectContent          bool
+	ReplyMarkup             interface{}
+	DisableNotification     bool
+	AllowPaidBroadcast      bool
+	MessageEffectID         string // for private chats only
+	ReplyParameters         ReplyParameters
+	SuggestedPostParameters *SuggestedPostParameters
 }
 
 func (chat *BaseChat) params() (Params, error) {
@@ -41,6 +43,7 @@ func (chat *BaseChat) params() (Params, error) {
 	params.Merge(p1)
 
 	params.AddNonZero("message_thread_id", chat.MessageThreadID)
+	params.AddNonZero("direct_messages_topic_id", chat.DirectMessagesTopicID)
 	params.AddBool("disable_notification", chat.DisableNotification)
 	params.AddBool("allow_paid_broadcast", chat.AllowPaidBroadcast)
 	params.AddBool("protect_content", chat.ProtectContent)
@@ -51,6 +54,10 @@ func (chat *BaseChat) params() (Params, error) {
 		return params, err
 	}
 	err = params.AddInterface("reply_parameters", chat.ReplyParameters)
+	if err != nil {
+		return params, err
+	}
+	err = params.AddInterface("suggested_post_parameters", chat.SuggestedPostParameters)
 	return params, err
 }
 
