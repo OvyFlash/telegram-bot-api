@@ -4,3 +4,4 @@ tmp/
 book/
 .vscode/
 CLAUDE.md
+api.json
