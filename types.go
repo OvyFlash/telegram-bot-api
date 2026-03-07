@@ -1153,6 +1153,7 @@ type MessageEntity struct {
 	//  "text_link" (for clickable text URLs),
 	//  "text_mention" (for users without usernames)
 	//  "custom_emoji" (for inline custom emoji stickers)
+	//  "date_time" (for formatted date and time)
 	Type string `json:"type"`
 	// Offset in UTF-16 code units to the start of the entity
 	Offset int `json:"offset"`
@@ -1174,6 +1175,14 @@ type MessageEntity struct {
 	//
 	// optional
 	CustomEmojiID string `json:"custom_emoji_id"`
+	// UnixTime for "date_time" only, the Unix time associated with the entity
+	//
+	// optional
+	UnixTime int64 `json:"unix_time"`
+	// DateTimeFormat for "date_time" only, the string that defines the formatting of the date and time.
+	//
+	// optional
+	DateTimeFormat string `json:"date_time_format"`
 }
 
 // ParseURL attempts to parse a URL contained within a MessageEntity.
