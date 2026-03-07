@@ -3086,6 +3086,10 @@ type ChatMember struct {
 	//
 	// optional
 	CanManageTags bool `json:"can_manage_tags,omitempty"`
+	// CanEditTag True, if the user is allowed to edit their own tag.
+	//
+	// optional
+	CanEditTag bool `json:"can_edit_tag,omitempty"`
 }
 
 // IsCreator returns if the ChatMember was the creator of the chat.
