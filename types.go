@@ -621,6 +621,10 @@ type Message struct {
 	//
 	// optional
 	SenderBusinessBot *User `json:"sender_business_bot,omitempty"`
+	// SenderTag Tag or custom title of the sender of the message; for supergroups only.
+	//
+	// optional
+	SenderTag string `json:"sender_tag,omitempty"`
 	// Date of the message was sent in Unix time
 	Date int64 `json:"date"`
 	// BusinessConnectionID is an unique identifier of the business connection
@@ -1173,7 +1177,19 @@ type MessageEntity struct {
 	// CustomEmojiID for "custom_emoji" only, unique identifier of the custom emoji
 	//
 	// optional
-	CustomEmojiID string `json:"custom_emoji_id"`
+	CustomEmojiID string `json:"custom_emoji_id,omitempty"`
+
+	// UnixTime Optional. For “date_time” only, the Unix time associated with the entity.
+	//
+	// optional
+	UnixTime int64 `json:"unix_time,omitempty"`
+
+	// DateTimeFormat Optional. For “date_time” only, the string that defines the formatting of the date and time.
+	// See date-time entity formatting for
+	// more details (https://core.telegram.org/bots/api#date-time-entity-formatting).
+	//
+	// optional
+	DateTimeFormat string `json:"date_time_format,omitempty"`
 }
 
 // ParseURL attempts to parse a URL contained within a MessageEntity.
@@ -2883,6 +2899,7 @@ type ChatAdministratorRights struct {
 	CanDeleteStories        bool `json:"can_delete_stories"`
 	CanManageTopics         bool `json:"can_manage_topics"`
 	CanManageDirectMessages bool `json:"can_manage_direct_messages,omitempty"`
+	CanManageTags           bool `json:"can_manage_tags,omitempty"`
 }
 
 // ChatMember contains information about one member of a chat.
@@ -2917,6 +2934,11 @@ type ChatMember struct {
 	//
 	// optional
 	UntilDate int64 `json:"until_date,omitempty"`
+	// Tag Optional. Tag of the member.
+	// Added at 01.03.2026 the field tag to the classes ChatMemberMember and ChatMemberRestricted.
+	//
+	// optional
+	Tag string `json:"tag,omitempty"`
 	// CanBeEdited administrators only.
 	// True, if the bot is allowed to edit administrator privileges of that user.
 	//
@@ -3058,6 +3080,12 @@ type ChatMember struct {
 	//
 	// optional
 	CanAddWebPagePreviews bool `json:"can_add_web_page_previews,omitempty"`
+	// CanManageTags Optional. True, if the administrator can edit the tags of regular members;
+	// for groups and supergroups only.
+	// If omitted defaults to the value of can_pin_messages.
+	//
+	// optional
+	CanManageTags bool `json:"can_manage_tags,omitempty"`
 }
 
 // IsCreator returns if the ChatMember was the creator of the chat.
@@ -3190,6 +3218,10 @@ type ChatPermissions struct {
 	//
 	// optional
 	CanAddWebPagePreviews bool `json:"can_add_web_page_previews,omitempty"`
+	// CanEditTag Optional. True, if the user is allowed to edit their own tag.
+	//
+	// optional
+	CanEditTag bool `json:"can_edit_tag,omitempty"`
 	// CanChangeInfo is true, if the user is allowed to change the chat title,
 	// photo and other settings. Ignored in public supergroups
 	//
@@ -4249,25 +4281,25 @@ type InlineQuery struct {
 // and ensuring only supported inline query results are used.
 type InlineQueryResults interface {
 	InlineQueryResultCachedAudio |
-		InlineQueryResultCachedDocument |
-		InlineQueryResultCachedGIF |
-		InlineQueryResultCachedMPEG4GIF |
-		InlineQueryResultCachedPhoto |
-		InlineQueryResultCachedSticker |
-		InlineQueryResultCachedVideo |
-		InlineQueryResultCachedVoice |
-		InlineQueryResultArticle |
-		InlineQueryResultAudio |
-		InlineQueryResultContact |
-		InlineQueryResultGame |
-		InlineQueryResultDocument |
-		InlineQueryResultGIF |
-		InlineQueryResultLocation |
-		InlineQueryResultMPEG4GIF |
-		InlineQueryResultPhoto |
-		InlineQueryResultVenue |
-		InlineQueryResultVideo |
-		InlineQueryResultVoice
+	InlineQueryResultCachedDocument |
+	InlineQueryResultCachedGIF |
+	InlineQueryResultCachedMPEG4GIF |
+	InlineQueryResultCachedPhoto |
+	InlineQueryResultCachedSticker |
+	InlineQueryResultCachedVideo |
+	InlineQueryResultCachedVoice |
+	InlineQueryResultArticle |
+	InlineQueryResultAudio |
+	InlineQueryResultContact |
+	InlineQueryResultGame |
+	InlineQueryResultDocument |
+	InlineQueryResultGIF |
+	InlineQueryResultLocation |
+	InlineQueryResultMPEG4GIF |
+	InlineQueryResultPhoto |
+	InlineQueryResultVenue |
+	InlineQueryResultVideo |
+	InlineQueryResultVoice
 }
 
 // InlineQueryResultCachedAudio is an inline query response with cached audio.

@@ -1818,6 +1818,7 @@ type PromoteChatMemberConfig struct {
 	CanDeleteStories        bool
 	CanManageTopics         bool
 	CanManageDirectMessages bool
+	CanManageTags           bool
 }
 
 func (config PromoteChatMemberConfig) method() string {
@@ -1846,6 +1847,7 @@ func (config PromoteChatMemberConfig) params() (Params, error) {
 	params.AddBool("can_delete_stories", config.CanDeleteStories)
 	params.AddBool("can_manage_topics", config.CanManageTopics)
 	params.AddBool("can_manage_direct_messages", config.CanManageDirectMessages)
+	params.AddBool("can_manage_tags", config.CanManageTags)
 
 	return params, nil
 }
@@ -1867,6 +1869,28 @@ func (config SetChatAdministratorCustomTitle) params() (Params, error) {
 		return params, err
 	}
 	params.AddNonEmpty("custom_title", config.CustomTitle)
+
+	return params, nil
+}
+
+// SetChatMemberTagConfig Use this method to set a tag for a regular member in a group or a supergroup.
+// The bot must be an administrator in the chat for this to work and must have the can_manage_tags administrator right.
+type SetChatMemberTagConfig struct {
+	ChatMemberConfig
+	// Tag Optional. New tag for the member; 0-16 characters, emoji are not allowed.
+	Tag string
+}
+
+func (SetChatMemberTagConfig) method() string {
+	return "setChatMemberTag"
+}
+
+func (config SetChatMemberTagConfig) params() (Params, error) {
+	params, err := config.ChatConfig.params()
+	if err != nil {
+		return params, err
+	}
+	params.AddNonEmpty("tag", config.Tag)
 
 	return params, nil
 }
