@@ -26,6 +26,24 @@ func TestSendPollConfigCloseDate64BitParam(t *testing.T) {
 	}
 }
 
+func TestSetChatMemberTagConfigTagParam(t *testing.T) {
+	config := SetChatMemberTagConfig{
+		ChatMemberConfig: ChatMemberConfig{
+			ChatConfig: ChatConfig{ChatID: 1},
+			UserID:     777,
+		},
+		Tag: "text tag param",
+	}
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+	if params["tag"] != "text tag param" {
+		t.Fatalf("tag mismatch: %s", params["tag"])
+	}
+}
+
 func TestBanChatSenderChatConfigUntilDate64BitParam(t *testing.T) {
 	config := BanChatSenderChatConfig{
 		ChatConfig:   ChatConfig{ChatID: 1},

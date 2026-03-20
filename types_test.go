@@ -387,6 +387,7 @@ var (
 	_ Chattable = RevokeChatInviteLinkConfig{}
 	_ Chattable = SendPollConfig{}
 	_ Chattable = SetChatDescriptionConfig{}
+	_ Chattable = SetChatMemberTagConfig{}
 	_ Chattable = SetChatMenuButtonConfig{}
 	_ Chattable = SetChatPhotoConfig{}
 	_ Chattable = SetChatTitleConfig{}
