@@ -140,7 +140,7 @@ type (
 
 	// PassportElementError represents an error in the Telegram Passport element
 	// which was submitted that should be resolved by the user.
-	PassportElementError interface{}
+	PassportElementError any
 
 	// PassportElementErrorDataField represents an issue in one of the data
 	// fields that was provided by the user. The error is considered resolved

@@ -8,6 +8,8 @@ var (
 	_ Chattable = DeclineSuggestedPostConfig{}
 	_ Chattable = UserProfileAudiosConfig{}
 	_ Chattable = SetPassportDataErrorsConfig{}
+	_ Chattable = GetManagedBotTokenConfig{}
+	_ Chattable = ReplaceManagedBotTokenConfig{}
 	_ Chattable = GetMyStarBalanceConfig{}
 	_ Chattable = GetBusinessAccountStarBalanceConfig{}
 	_ Chattable = TransferBusinessAccountStarsConfig{}
@@ -30,6 +32,7 @@ var (
 	_ Chattable = RemoveMyProfilePhotoConfig{}
 	_ Chattable = SetBusinessAccountProfilePhotoConfig{}
 	_ Chattable = RemoveBusinessAccountProfilePhotoConfig{}
+	_ Chattable = SavePreparedKeyboardButtonConfig{}
 	_ Chattable = ChatMemberCountConfig{}
 )
 

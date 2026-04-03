@@ -26,6 +26,127 @@ func TestSendPollConfigCloseDate64BitParam(t *testing.T) {
 	}
 }
 
+func TestSendPollConfigBotAPI96Params(t *testing.T) {
+	allowsRevoting := false
+	config := SendPollConfig{
+		BaseChat: BaseChat{
+			ChatConfig: ChatConfig{ChatID: 1},
+		},
+		Question:               "q",
+		Options:                []InputPollOption{{Text: "a"}, {Text: "b"}, {Text: "c"}},
+		Type:                   "quiz",
+		AllowsRevoting:         &allowsRevoting,
+		ShuffleOptions:         true,
+		AllowAddingOptions:     true,
+		HideResultsUntilCloses: true,
+		CorrectOptionIDs:       []int{0, 2},
+		Description:            "desc",
+		DescriptionEntities:    []MessageEntity{{Type: "bold", Offset: 0, Length: 4}},
+	}
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	if params["allows_revoting"] != "false" {
+		t.Fatalf("allows_revoting mismatch: %#v", params)
+	}
+	if params["shuffle_options"] != "true" {
+		t.Fatalf("shuffle_options mismatch: %#v", params)
+	}
+	if params["allow_adding_options"] != "true" {
+		t.Fatalf("allow_adding_options mismatch: %#v", params)
+	}
+	if params["hide_results_until_closes"] != "true" {
+		t.Fatalf("hide_results_until_closes mismatch: %#v", params)
+	}
+	if params["correct_option_ids"] != "[0,2]" {
+		t.Fatalf("correct_option_ids mismatch: %#v", params)
+	}
+	if _, ok := params["correct_option_id"]; ok {
+		t.Fatalf("unexpected legacy correct_option_id key: %#v", params)
+	}
+	if params["description"] != "desc" {
+		t.Fatalf("description mismatch: %#v", params)
+	}
+	if params["description_entities"] != `[{"type":"bold","offset":0,"length":4}]` {
+		t.Fatalf("description_entities mismatch: %#v", params)
+	}
+}
+
+func TestSendPollConfigAllowsRevotingOmittedWhenNil(t *testing.T) {
+	config := SendPollConfig{
+		BaseChat: BaseChat{
+			ChatConfig: ChatConfig{ChatID: 1},
+		},
+		Question: "q",
+		Options:  []InputPollOption{{Text: "a"}, {Text: "b"}},
+	}
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	if _, ok := params["allows_revoting"]; ok {
+		t.Fatalf("unexpected allows_revoting param: %#v", params)
+	}
+	if _, ok := params["correct_option_ids"]; ok {
+		t.Fatalf("unexpected correct_option_ids param: %#v", params)
+	}
+}
+
+func TestSendPollConfigLegacyCorrectOptionIDCompat(t *testing.T) {
+	config := SendPollConfig{
+		BaseChat: BaseChat{
+			ChatConfig: ChatConfig{ChatID: 1},
+		},
+		Question:        "q",
+		Options:         []InputPollOption{{Text: "a"}, {Text: "b"}},
+		Type:            "quiz",
+		CorrectOptionID: 0,
+	}
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	if params["correct_option_ids"] != "[0]" {
+		t.Fatalf("correct_option_ids mismatch: %#v", params)
+	}
+	if _, ok := params["correct_option_id"]; ok {
+		t.Fatalf("unexpected legacy correct_option_id key: %#v", params)
+	}
+}
+
+func TestSavePreparedKeyboardButtonConfigParams(t *testing.T) {
+	config := SavePreparedKeyboardButtonConfig{
+		UserID: 42,
+		Button: KeyboardButton{
+			Text: "Create bot",
+			RequestManagedBot: &KeyboardButtonRequestManagedBot{
+				RequestID:         7,
+				SuggestedName:     "Demo",
+				SuggestedUsername: "demo_helper_bot",
+			},
+		},
+	}
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	if params["user_id"] != "42" {
+		t.Fatalf("user_id mismatch: %#v", params)
+	}
+	if !strings.Contains(params["button"], `"request_managed_bot":{"request_id":7`) {
+		t.Fatalf("button payload mismatch: %#v", params)
+	}
+}
+
 func TestSetChatMemberTagConfigTagParam(t *testing.T) {
 	config := SetChatMemberTagConfig{
 		ChatMemberConfig: ChatMemberConfig{
@@ -769,7 +890,7 @@ func TestCloneMediaSlice(t *testing.T) {
 	}
 
 	// Test that we have a deep copy (modifying one doesn't affect the other)
-	for i := 0; i < len(inputMedia); i++ {
+	for i := range inputMedia {
 		if fmt.Sprintf("%T", cloned[i]) != fmt.Sprintf("%T", inputMedia[i]) {
 			t.Errorf("Type mismatch at index %d: expected %T, got %T",
 				i, inputMedia[i], cloned[i])

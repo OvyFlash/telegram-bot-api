@@ -33,7 +33,7 @@ func polling_inline_query() {
 			InlineQueryID: update.InlineQuery.ID,
 			IsPersonal:    true,
 			CacheTime:     0,
-			Results:       []interface{}{article},
+			Results:       []any{article},
 		}
 
 		if _, err := bot.Request(inlineConfig); err != nil {

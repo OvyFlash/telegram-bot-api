@@ -11,8 +11,8 @@ import (
 // Instead of requiring the standard logger, we can just specify the methods we
 // use and allow users to pass anything that implements these.
 type BotLogger interface {
-	Println(v ...interface{})
-	Printf(format string, v ...interface{})
+	Println(v ...any)
+	Printf(format string, v ...any)
 }
 
 var log BotLogger = stdlog.New(os.Stderr, "", stdlog.LstdFlags)

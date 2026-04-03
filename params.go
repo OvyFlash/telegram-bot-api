@@ -2,6 +2,7 @@ package tgbotapi
 
 import (
 	"encoding/json"
+	"maps"
 	"reflect"
 	"strconv"
 )
@@ -37,6 +38,13 @@ func (p Params) AddBool(key string, value bool) {
 	}
 }
 
+// AddBoolPtr adds a value of a bool pointer if it is not nil.
+func (p Params) AddBoolPtr(key string, value *bool) {
+	if value != nil {
+		p[key] = strconv.FormatBool(*value)
+	}
+}
+
 // AddNonZeroFloat adds a floating point value that is not zero.
 func (p Params) AddNonZeroFloat(key string, value float64) {
 	if value != 0 {
@@ -45,8 +53,8 @@ func (p Params) AddNonZeroFloat(key string, value float64) {
 }
 
 // AddInterface adds an interface if it is not nil and can be JSON marshalled.
-func (p Params) AddInterface(key string, value interface{}) error {
-	if value == nil || (reflect.ValueOf(value).Kind() == reflect.Ptr && reflect.ValueOf(value).IsNil()) {
+func (p Params) AddInterface(key string, value any) error {
+	if value == nil || (reflect.ValueOf(value).Kind() == reflect.Pointer && reflect.ValueOf(value).IsNil()) {
 		return nil
 	}
 
@@ -63,7 +71,7 @@ func (p Params) AddInterface(key string, value interface{}) error {
 // AddFirstValid attempts to add the first item that is not a default value.
 //
 // For example, AddFirstValid(0, "", "test") would add "test".
-func (p Params) AddFirstValid(key string, args ...interface{}) error {
+func (p Params) AddFirstValid(key string, args ...any) error {
 	for _, arg := range args {
 		switch v := arg.(type) {
 		case int:
@@ -98,7 +106,5 @@ func (p Params) AddFirstValid(key string, args ...interface{}) error {
 
 // Merge merges two sets of parameters. Overwrites old fields if present
 func (p *Params) Merge(p1 Params) {
-	for k, v := range p1 {
-		(*p)[k] = v
-	}
+	maps.Copy((*p), p1)
 }

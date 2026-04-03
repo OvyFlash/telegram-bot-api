@@ -1,5 +1,4 @@
 //go:build api_parity
-// +build api_parity
 
 package tgbotapi
 
@@ -238,6 +237,21 @@ func loadParityDoc(t *testing.T) parityDoc {
 			return parityDoc{}
 		}
 		t.Fatalf("read api.json: %v", err)
+	}
+
+	trimmed := strings.TrimSpace(string(content))
+	if trimmed == "" {
+		t.Fatalf("api.json is empty")
+	}
+	if trimmed[0] == '<' {
+		preview := trimmed
+		if newline := strings.IndexByte(preview, '\n'); newline >= 0 {
+			preview = preview[:newline]
+		}
+		if len(preview) > 120 {
+			preview = preview[:120] + "..."
+		}
+		t.Fatalf("api.json contains HTML instead of JSON; fetch the raw file, not the GitHub blob page (starts with %q)", preview)
 	}
 
 	var doc parityDoc

@@ -732,6 +732,32 @@ func (bot *BotAPI) GetInviteLink(config ChatInviteLinkConfig) (string, error) {
 	return inviteLink, err
 }
 
+// GetManagedBotToken gets the token of a managed bot.
+func (bot *BotAPI) GetManagedBotToken(config GetManagedBotTokenConfig) (string, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return "", err
+	}
+
+	var token string
+	err = json.Unmarshal(resp.Result, &token)
+
+	return token, err
+}
+
+// ReplaceManagedBotToken revokes the current token of a managed bot and returns a new one.
+func (bot *BotAPI) ReplaceManagedBotToken(config ReplaceManagedBotTokenConfig) (string, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return "", err
+	}
+
+	var token string
+	err = json.Unmarshal(resp.Result, &token)
+
+	return token, err
+}
+
 // GetMyStarBalance gets the current Telegram Stars balance of the bot.
 func (bot *BotAPI) GetMyStarBalance(config GetMyStarBalanceConfig) (StarAmount, error) {
 	resp, err := bot.Request(config)
@@ -937,6 +963,19 @@ func SavePreparedInlineMessage[T InlineQueryResults](bot *BotAPI, config SavePre
 	err = json.Unmarshal(resp.Result, &preparedInlineMessage)
 
 	return preparedInlineMessage, err
+}
+
+// SavePreparedKeyboardButton stores a keyboard button that can be used by a user of a Mini App.
+func (bot *BotAPI) SavePreparedKeyboardButton(config SavePreparedKeyboardButtonConfig) (PreparedKeyboardButton, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return PreparedKeyboardButton{}, err
+	}
+
+	var preparedKeyboardButton PreparedKeyboardButton
+	err = json.Unmarshal(resp.Result, &preparedKeyboardButton)
+
+	return preparedKeyboardButton, err
 }
 
 // EscapeText takes an input text and escape Telegram markup symbols.

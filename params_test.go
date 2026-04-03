@@ -11,7 +11,7 @@ func assertLen(t *testing.T, params Params, l int) {
 	}
 }
 
-func assertEq(t *testing.T, a interface{}, b interface{}) {
+func assertEq(t *testing.T, a any, b any) {
 	if a != b {
 		t.Fatalf("Values did not match, a: %v, b: %v\n", a, b)
 	}
@@ -55,6 +55,24 @@ func TestAddBool(t *testing.T) {
 	params.AddBool("test", false)
 	assertLen(t, params, 1)
 	assertEq(t, params["test"], "")
+}
+
+func TestAddBoolPtr(t *testing.T) {
+	params := make(Params)
+	trueValue := true
+	falseValue := false
+
+	params.AddBoolPtr("true", &trueValue)
+	assertLen(t, params, 1)
+	assertEq(t, params["true"], "true")
+
+	params.AddBoolPtr("false", &falseValue)
+	assertLen(t, params, 2)
+	assertEq(t, params["false"], "false")
+
+	params.AddBoolPtr("nil", nil)
+	assertLen(t, params, 2)
+	assertEq(t, params["nil"], "")
 }
 
 func TestAddNonZeroFloat(t *testing.T) {

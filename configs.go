@@ -127,6 +127,9 @@ const (
 	// UpdateTypeRemovedChatBoost is boost was removed from a chat.
 	// The bot must be an administrator in the chat to receive these updates.
 	UpdateTypeRemovedChatBoost = "removed_chat_boost"
+
+	// UpdateTypeManagedBot is emitted when a managed bot is created or its token changes.
+	UpdateTypeManagedBot = "managed_bot"
 )
 
 // Library errors
@@ -1065,20 +1068,29 @@ func (config ContactConfig) method() string {
 // SendPollConfig allows you to send a poll.
 type SendPollConfig struct {
 	BaseChat
-	Question              string
-	QuestionParseMode     string          // optional
-	QuestionEntities      []MessageEntity // optional
-	Options               []InputPollOption
-	IsAnonymous           bool
-	Type                  string
-	AllowsMultipleAnswers bool
-	CorrectOptionID       int64
-	Explanation           string
-	ExplanationParseMode  string
-	ExplanationEntities   []MessageEntity
-	OpenPeriod            int
-	CloseDate             int64
-	IsClosed              bool
+	Question               string
+	QuestionParseMode      string          // optional
+	QuestionEntities       []MessageEntity // optional
+	Options                []InputPollOption
+	IsAnonymous            bool
+	Type                   string
+	AllowsMultipleAnswers  bool
+	AllowsRevoting         *bool
+	ShuffleOptions         bool
+	AllowAddingOptions     bool
+	HideResultsUntilCloses bool
+	CorrectOptionIDs       []int
+	// Deprecated: use CorrectOptionIDs instead.
+	CorrectOptionID      int64
+	Explanation          string
+	ExplanationParseMode string
+	ExplanationEntities  []MessageEntity
+	OpenPeriod           int
+	CloseDate            int64
+	IsClosed             bool
+	Description          string
+	DescriptionParseMode string
+	DescriptionEntities  []MessageEntity
 }
 
 func (config SendPollConfig) params() (Params, error) {
@@ -1098,13 +1110,31 @@ func (config SendPollConfig) params() (Params, error) {
 	params["is_anonymous"] = strconv.FormatBool(config.IsAnonymous)
 	params.AddNonEmpty("type", config.Type)
 	params["allows_multiple_answers"] = strconv.FormatBool(config.AllowsMultipleAnswers)
-	params["correct_option_id"] = strconv.FormatInt(config.CorrectOptionID, 10)
+	params.AddBoolPtr("allows_revoting", config.AllowsRevoting)
+	params.AddBool("shuffle_options", config.ShuffleOptions)
+	params.AddBool("allow_adding_options", config.AllowAddingOptions)
+	params.AddBool("hide_results_until_closes", config.HideResultsUntilCloses)
+	switch {
+	case len(config.CorrectOptionIDs) > 0:
+		if err = params.AddInterface("correct_option_ids", config.CorrectOptionIDs); err != nil {
+			return params, err
+		}
+	case config.CorrectOptionID != 0 || config.Type == "quiz":
+		if err = params.AddInterface("correct_option_ids", []int{int(config.CorrectOptionID)}); err != nil {
+			return params, err
+		}
+	}
 	params.AddBool("is_closed", config.IsClosed)
 	params.AddNonEmpty("explanation", config.Explanation)
 	params.AddNonEmpty("explanation_parse_mode", config.ExplanationParseMode)
 	params.AddNonZero("open_period", config.OpenPeriod)
 	params.AddNonZero64("close_date", config.CloseDate)
-	err = params.AddInterface("explanation_entities", config.ExplanationEntities)
+	params.AddNonEmpty("description", config.Description)
+	params.AddNonEmpty("description_parse_mode", config.DescriptionParseMode)
+	if err = params.AddInterface("explanation_entities", config.ExplanationEntities); err != nil {
+		return params, err
+	}
+	err = params.AddInterface("description_entities", config.DescriptionEntities)
 
 	return params, err
 }
@@ -1602,7 +1632,7 @@ type InlineQueryResultsButton struct {
 // InlineConfig contains information on making an InlineQuery response.
 type InlineConfig struct {
 	InlineQueryID string                    `json:"inline_query_id"`
-	Results       []interface{}             `json:"results"`
+	Results       []any                     `json:"results"`
 	CacheTime     int                       `json:"cache_time"`
 	IsPersonal    bool                      `json:"is_personal"`
 	NextOffset    string                    `json:"next_offset"`
@@ -1636,7 +1666,7 @@ type AnswerWebAppQueryConfig struct {
 	// WebAppQueryID is the unique identifier for the query to be answered.
 	WebAppQueryID string `json:"web_app_query_id"`
 	// Result is an InlineQueryResult object describing the message to be sent.
-	Result interface{} `json:"result"`
+	Result any `json:"result"`
 }
 
 func (config AnswerWebAppQueryConfig) method() string {
@@ -1680,6 +1710,26 @@ func (config SavePreparedInlineMessageConfig[T]) params() (Params, error) {
 	params.AddBool("allow_bot_chats", config.AllowBotChats)
 	params.AddBool("allow_group_chats", config.AllowGroupChats)
 	params.AddBool("allow_channel_chats", config.AllowChannelChats)
+
+	return params, err
+}
+
+// SavePreparedKeyboardButtonConfig stores a keyboard button that can be used by a user of a Mini App.
+// Returns a PreparedKeyboardButton object.
+type SavePreparedKeyboardButtonConfig struct {
+	UserID int64
+	Button KeyboardButton
+}
+
+func (SavePreparedKeyboardButtonConfig) method() string {
+	return "savePreparedKeyboardButton"
+}
+
+func (config SavePreparedKeyboardButtonConfig) params() (Params, error) {
+	params := make(Params)
+
+	params.AddNonZero64("user_id", config.UserID)
+	err := params.AddInterface("button", config.Button)
 
 	return params, err
 }
@@ -3637,11 +3687,39 @@ func (config GetUserChatBoostsConfig) params() (Params, error) {
 }
 
 type (
+	GetManagedBotTokenConfig struct {
+		UserID int64
+	}
+	ReplaceManagedBotTokenConfig struct {
+		UserID int64
+	}
 	GetBusinessConnectionConfig struct {
 		BusinessConnectionID BusinessConnectionID
 	}
 	BusinessConnectionID string
 )
+
+func (GetManagedBotTokenConfig) method() string {
+	return "getManagedBotToken"
+}
+
+func (config GetManagedBotTokenConfig) params() (Params, error) {
+	params := make(Params)
+	params.AddNonZero64("user_id", config.UserID)
+
+	return params, nil
+}
+
+func (ReplaceManagedBotTokenConfig) method() string {
+	return "replaceManagedBotToken"
+}
+
+func (config ReplaceManagedBotTokenConfig) params() (Params, error) {
+	params := make(Params)
+	params.AddNonZero64("user_id", config.UserID)
+
+	return params, nil
+}
 
 func (GetBusinessConnectionConfig) method() string {
 	return "getBusinessConnection"

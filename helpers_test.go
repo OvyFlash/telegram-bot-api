@@ -9,7 +9,7 @@ func TestNewWebhook(t *testing.T) {
 
 	if err != nil ||
 		result.URL.String() != "https://example.com/token" ||
-		result.Certificate != interface{}(nil) ||
+		result.Certificate != any(nil) ||
 		result.MaxConnections != 0 ||
 		len(result.AllowedUpdates) != 0 {
 		t.Fail()

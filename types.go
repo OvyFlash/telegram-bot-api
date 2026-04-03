@@ -155,6 +155,10 @@ type Update struct {
 	//
 	// optional
 	ChatBoostRemoved *ChatBoostRemoved `json:"removed_chat_boost,omitempty"`
+	// ManagedBot is emitted when a managed bot is created or its token changes.
+	//
+	// optional
+	ManagedBot *ManagedBotUpdated `json:"managed_bot,omitempty"`
 }
 
 // SentFrom returns the user who sent an update. Can be nil, if Telegram did not provide information
@@ -280,6 +284,10 @@ type User struct {
 	//
 	// optional
 	AllowsUsersToCreateTopics bool `json:"allows_users_to_create_topics,omitempty"`
+	// CanManageBots is true, if the bot can create managed bots.
+	//
+	// optional
+	CanManageBots bool `json:"can_manage_bots,omitempty"`
 }
 
 // String displays a simple text version of a user.
@@ -672,6 +680,10 @@ type Message struct {
 	//
 	// optional
 	ReplyToChecklistTaskID int `json:"reply_to_checklist_task_id,omitempty"`
+	// ReplyToPollOptionID is the persistent identifier of the poll option this message replies to.
+	//
+	// optional
+	ReplyToPollOptionID string `json:"reply_to_poll_option_id,omitempty"`
 	// ViaBot through which the message was sent;
 	//
 	// optional
@@ -1008,10 +1020,22 @@ type Message struct {
 	//
 	// optional
 	GiveawayCompleted *GiveawayCompleted `json:"giveaway_completed,omitempty"`
+	// ManagedBotCreated is a service message about a bot created for management by the current bot.
+	//
+	// optional
+	ManagedBotCreated *ManagedBotCreated `json:"managed_bot_created,omitempty"`
 	// PaidMessagePriceChanged is a service message for paid message price changes.
 	//
 	// optional
 	PaidMessagePriceChanged *PaidMessagePriceChanged `json:"paid_message_price_changed,omitempty"`
+	// PollOptionAdded is a service message about an option added to a poll.
+	//
+	// optional
+	PollOptionAdded *PollOptionAdded `json:"poll_option_added,omitempty"`
+	// PollOptionDeleted is a service message about an option deleted from a poll.
+	//
+	// optional
+	PollOptionDeleted *PollOptionDeleted `json:"poll_option_deleted,omitempty"`
 	// SuggestedPostApproved is a service message: suggested post approved.
 	//
 	// optional
@@ -1390,7 +1414,7 @@ type ReplyParameters struct {
 	// unique identifier for the chat or username of the channel (in the format @channelusername)
 	//
 	// optional
-	ChatID interface{} `json:"chat_id,omitempty"`
+	ChatID any `json:"chat_id,omitempty"`
 	// AllowSendingWithoutReply true if the message should be sent even
 	// if the specified message to be replied to is not found;
 	// can be used only for replies in the same chat and forum topic.
@@ -1422,6 +1446,10 @@ type ReplyParameters struct {
 	//
 	// optional
 	ChecklistTaskID int `json:"checklist_task_id,omitempty"`
+	// PollOptionID is the persistent identifier of the poll option to reply to.
+	//
+	// optional
+	PollOptionID string `json:"poll_option_id,omitempty"`
 }
 
 const (
@@ -1765,6 +1793,8 @@ type Dice struct {
 
 // PollOption contains information about one answer option in a poll.
 type PollOption struct {
+	// PersistentID is the unique identifier of the option.
+	PersistentID string `json:"persistent_id"`
 	// Text is the option text, 1-100 characters
 	Text string `json:"text"`
 	// Special entities that appear in the option text.
@@ -1774,6 +1804,18 @@ type PollOption struct {
 	TextEntities []MessageEntity `json:"text_entities,omitempty"`
 	// VoterCount is the number of users that voted for this option
 	VoterCount int `json:"voter_count"`
+	// AddedByUser is the user who added the option.
+	//
+	// optional
+	AddedByUser *User `json:"added_by_user,omitempty"`
+	// AddedByChat is the chat that added the option.
+	//
+	// optional
+	AddedByChat *Chat `json:"added_by_chat,omitempty"`
+	// AdditionDate is the Unix time when the option was added.
+	//
+	// optional
+	AdditionDate int64 `json:"addition_date,omitempty"`
 }
 
 // InputPollOption contains information about one answer option in a poll to send.
@@ -1809,13 +1851,16 @@ type PollAnswer struct {
 	// OptionIDs is the 0-based identifiers of poll options chosen by the user.
 	// May be empty if user retracted vote.
 	OptionIDs []int `json:"option_ids"`
+	// OptionPersistentIDs are persistent identifiers of poll options chosen by the user.
+	// May be empty if the vote was retracted.
+	OptionPersistentIDs []string `json:"option_persistent_ids"`
 }
 
 // Poll contains information about a poll.
 type Poll struct {
 	// ID is the unique poll identifier
 	ID string `json:"id"`
-	// Question is the poll question, 1-255 characters
+	// Question is the poll question, 1-300 characters
 	Question string `json:"question"`
 	// Special entities that appear in the question.
 	// Currently, only custom emoji entities are allowed in poll questions
@@ -1834,12 +1879,17 @@ type Poll struct {
 	Type string `json:"type"`
 	// AllowsMultipleAnswers is true, if the poll allows multiple answers
 	AllowsMultipleAnswers bool `json:"allows_multiple_answers"`
-	// CorrectOptionID is the 0-based identifier of the correct answer option.
-	// Available only for polls in quiz mode, which are closed, or was sent (not
+	// AllowsRevoting is true, if the poll allows changing chosen answer options.
+	AllowsRevoting bool `json:"allows_revoting"`
+	// CorrectOptionIDs are the 0-based identifiers of the correct answer options.
+	// Available only for polls in quiz mode, which are closed, or were sent (not
 	// forwarded) by the bot or to the private chat with the bot.
 	//
 	// optional
-	CorrectOptionID int `json:"correct_option_id,omitempty"`
+	CorrectOptionIDs []int `json:"correct_option_ids,omitempty"`
+	// CorrectOptionID preserves compatibility with older versions of the library.
+	// It is derived from CorrectOptionIDs when exactly one correct answer is present.
+	CorrectOptionID int `json:"-"`
 	// Explanation is text that is shown when a user chooses an incorrect answer
 	// or taps on the lamp icon in a quiz-style poll, 0-200 characters
 	//
@@ -1860,6 +1910,39 @@ type Poll struct {
 	//
 	// optional
 	CloseDate int64 `json:"close_date,omitempty"`
+	// Description is the poll description.
+	//
+	// optional
+	Description string `json:"description,omitempty"`
+	// DescriptionEntities are special entities appearing in the description.
+	//
+	// optional
+	DescriptionEntities []MessageEntity `json:"description_entities,omitempty"`
+}
+
+func (p *Poll) UnmarshalJSON(data []byte) error {
+	type pollAlias Poll
+	aux := struct {
+		*pollAlias
+		LegacyCorrectOptionID *int `json:"correct_option_id,omitempty"`
+	}{
+		pollAlias: (*pollAlias)(p),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	p.CorrectOptionID = 0
+	switch {
+	case len(p.CorrectOptionIDs) == 1:
+		p.CorrectOptionID = p.CorrectOptionIDs[0]
+	case len(p.CorrectOptionIDs) == 0 && aux.LegacyCorrectOptionID != nil:
+		p.CorrectOptionID = *aux.LegacyCorrectOptionID
+		p.CorrectOptionIDs = []int{*aux.LegacyCorrectOptionID}
+	}
+
+	return nil
 }
 
 // Location represents a point on the map.
@@ -2453,6 +2536,10 @@ type KeyboardButton struct {
 	//
 	// optional
 	RequestChat *KeyboardButtonRequestChat `json:"request_chat,omitempty"`
+	// RequestManagedBot asks the user to create and share a managed bot.
+	//
+	// optional
+	RequestManagedBot *KeyboardButtonRequestManagedBot `json:"request_managed_bot,omitempty"`
 	// RequestContact if True, the user's phone number will be sent
 	// as a contact when the button is pressed.
 	// Available in private chats only.
@@ -2571,6 +2658,20 @@ type KeyboardButtonRequestChat struct {
 	//
 	// optional
 	RequestPhoto bool `json:"request_photo,omitempty"`
+}
+
+// KeyboardButtonRequestManagedBot defines the parameters for the creation of a managed bot.
+type KeyboardButtonRequestManagedBot struct {
+	// RequestID is a signed 32-bit identifier of the request.
+	RequestID int `json:"request_id"`
+	// SuggestedName is a suggested name for the bot.
+	//
+	// optional
+	SuggestedName string `json:"suggested_name,omitempty"`
+	// SuggestedUsername is a suggested username for the bot.
+	//
+	// optional
+	SuggestedUsername string `json:"suggested_username,omitempty"`
 }
 
 // KeyboardButtonPollType represents type of poll, which is allowed to
@@ -4285,25 +4386,25 @@ type InlineQuery struct {
 // and ensuring only supported inline query results are used.
 type InlineQueryResults interface {
 	InlineQueryResultCachedAudio |
-	InlineQueryResultCachedDocument |
-	InlineQueryResultCachedGIF |
-	InlineQueryResultCachedMPEG4GIF |
-	InlineQueryResultCachedPhoto |
-	InlineQueryResultCachedSticker |
-	InlineQueryResultCachedVideo |
-	InlineQueryResultCachedVoice |
-	InlineQueryResultArticle |
-	InlineQueryResultAudio |
-	InlineQueryResultContact |
-	InlineQueryResultGame |
-	InlineQueryResultDocument |
-	InlineQueryResultGIF |
-	InlineQueryResultLocation |
-	InlineQueryResultMPEG4GIF |
-	InlineQueryResultPhoto |
-	InlineQueryResultVenue |
-	InlineQueryResultVideo |
-	InlineQueryResultVoice
+		InlineQueryResultCachedDocument |
+		InlineQueryResultCachedGIF |
+		InlineQueryResultCachedMPEG4GIF |
+		InlineQueryResultCachedPhoto |
+		InlineQueryResultCachedSticker |
+		InlineQueryResultCachedVideo |
+		InlineQueryResultCachedVoice |
+		InlineQueryResultArticle |
+		InlineQueryResultAudio |
+		InlineQueryResultContact |
+		InlineQueryResultGame |
+		InlineQueryResultDocument |
+		InlineQueryResultGIF |
+		InlineQueryResultLocation |
+		InlineQueryResultMPEG4GIF |
+		InlineQueryResultPhoto |
+		InlineQueryResultVenue |
+		InlineQueryResultVideo |
+		InlineQueryResultVoice
 }
 
 // InlineQueryResultCachedAudio is an inline query response with cached audio.
@@ -4336,7 +4437,7 @@ type InlineQueryResultCachedAudio struct {
 	// InputMessageContent content of the message to be sent instead of the audio
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // InlineQueryResultCachedDocument is an inline query response with cached document.
@@ -4377,7 +4478,7 @@ type InlineQueryResultCachedDocument struct {
 	// InputMessageContent content of the message to be sent instead of the file
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // InlineQueryResultCachedGIF is an inline query response with cached gif.
@@ -4418,7 +4519,7 @@ type InlineQueryResultCachedGIF struct {
 	// InputMessageContent content of the message to be sent instead of the GIF animation.
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // InlineQueryResultCachedMPEG4GIF is an inline query response with cached
@@ -4461,7 +4562,7 @@ type InlineQueryResultCachedMPEG4GIF struct {
 	// InputMessageContent content of the message to be sent instead of the video animation.
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // InlineQueryResultCachedPhoto is an inline query response with cached photo.
@@ -4506,7 +4607,7 @@ type InlineQueryResultCachedPhoto struct {
 	// InputMessageContent content of the message to be sent instead of the photo.
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // InlineQueryResultCachedSticker is an inline query response with cached sticker.
@@ -4526,7 +4627,7 @@ type InlineQueryResultCachedSticker struct {
 	// InputMessageContent content of the message to be sent instead of the sticker
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // InlineQueryResultCachedVideo is an inline query response with cached video.
@@ -4569,7 +4670,7 @@ type InlineQueryResultCachedVideo struct {
 	// InputMessageContent content of the message to be sent instead of the video
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // InlineQueryResultCachedVoice is an inline query response with cached voice.
@@ -4604,7 +4705,7 @@ type InlineQueryResultCachedVoice struct {
 	// InputMessageContent content of the message to be sent instead of the voice message
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // InlineQueryResultArticle represents a link to an article or web page.
@@ -4616,7 +4717,7 @@ type InlineQueryResultArticle struct {
 	// Title of the result
 	Title string `json:"title"`
 	// InputMessageContent content of the message to be sent.
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 	// ReplyMarkup Inline keyboard attached to the message.
 	//
 	// optional
@@ -4688,7 +4789,7 @@ type InlineQueryResultAudio struct {
 	// InputMessageContent content of the message to be sent instead of the audio
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // InlineQueryResultContact is an inline query response contact.
@@ -4700,7 +4801,7 @@ type InlineQueryResultContact struct {
 	LastName            string                `json:"last_name"`
 	VCard               string                `json:"vcard"`
 	ReplyMarkup         *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
-	InputMessageContent interface{}           `json:"input_message_content,omitempty"`
+	InputMessageContent any                   `json:"input_message_content,omitempty"`
 	ThumbURL            string                `json:"thumbnail_url"`
 	ThumbWidth          int                   `json:"thumbnail_width"`
 	ThumbHeight         int                   `json:"thumbnail_height"`
@@ -4755,7 +4856,7 @@ type InlineQueryResultDocument struct {
 	// InputMessageContent content of the message to be sent instead of the file
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 	// ThumbURL url of the thumbnail (jpeg only) for the file
 	//
 	// optional
@@ -4824,7 +4925,7 @@ type InlineQueryResultGIF struct {
 	// InputMessageContent content of the message to be sent instead of the GIF animation.
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // InlineQueryResultLocation is an inline query response location.
@@ -4867,7 +4968,7 @@ type InlineQueryResultLocation struct {
 	// InputMessageContent content of the message to be sent instead of the location
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 	// ThumbURL url of the thumbnail for the result
 	//
 	// optional
@@ -4936,7 +5037,7 @@ type InlineQueryResultMPEG4GIF struct {
 	// InputMessageContent content of the message to be sent instead of the video animation
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // InlineQueryResultPhoto is an inline query response photo.
@@ -4996,7 +5097,7 @@ type InlineQueryResultPhoto struct {
 	// InputMessageContent content of the message to be sent instead of the photo.
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // InlineQueryResultVenue is an inline query response venue.
@@ -5037,7 +5138,7 @@ type InlineQueryResultVenue struct {
 	// InputMessageContent content of the message to be sent instead of the venue
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 	// ThumbURL url of the thumbnail for the result
 	//
 	// optional
@@ -5112,7 +5213,7 @@ type InlineQueryResultVideo struct {
 	// an HTML-page as a result (e.g., a YouTube video).
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // InlineQueryResultVoice is an inline query response voice.
@@ -5151,7 +5252,7 @@ type InlineQueryResultVoice struct {
 	// InputMessageContent content of the message to be sent instead of the voice recording
 	//
 	// optional
-	InputMessageContent interface{} `json:"input_message_content,omitempty"`
+	InputMessageContent any `json:"input_message_content,omitempty"`
 }
 
 // ChosenInlineResult is an inline query result chosen by a User
@@ -5191,6 +5292,12 @@ type PreparedInlineMessage struct {
 	// ExpirationDate of the prepared message, in Unix time.
 	// Expired prepared messages can no longer be used
 	ExpirationDate int64 `json:"expiration_date"`
+}
+
+// PreparedKeyboardButton describes a keyboard button to be used by a user of a Mini App.
+type PreparedKeyboardButton struct {
+	// ID is a unique identifier of the prepared keyboard button.
+	ID string `json:"id"`
 }
 
 // InputTextMessageContent contains text for displaying
@@ -5820,10 +5927,10 @@ type StarTransactions struct {
 type InputFile = RequestFileData
 
 // InputMessageContent represents content of a message to be sent as input.
-type InputMessageContent interface{}
+type InputMessageContent any
 
 // InlineQueryResult represents any inline query result object.
-type InlineQueryResult interface{}
+type InlineQueryResult any
 
 // InputProfilePhoto represents profile photo payload for profile photo methods.
 type InputProfilePhoto interface {
@@ -5928,6 +6035,33 @@ type ChatOwnerChanged struct {
 	NewOwner User `json:"new_owner"`
 }
 
+// ManagedBotCreated contains information about a created managed bot.
+type ManagedBotCreated struct {
+	Bot User `json:"bot"`
+}
+
+// ManagedBotUpdated contains information about managed bot creation or token updates.
+type ManagedBotUpdated struct {
+	User User `json:"user"`
+	Bot  User `json:"bot"`
+}
+
+// PollOptionAdded describes a service message about an option added to a poll.
+type PollOptionAdded struct {
+	PollMessage        *MaybeInaccessibleMessage `json:"poll_message,omitempty"`
+	OptionPersistentID string                    `json:"option_persistent_id"`
+	OptionText         string                    `json:"option_text"`
+	OptionTextEntities []MessageEntity           `json:"option_text_entities,omitempty"`
+}
+
+// PollOptionDeleted describes a service message about an option deleted from a poll.
+type PollOptionDeleted struct {
+	PollMessage        *MaybeInaccessibleMessage `json:"poll_message,omitempty"`
+	OptionPersistentID string                    `json:"option_persistent_id"`
+	OptionText         string                    `json:"option_text"`
+	OptionTextEntities []MessageEntity           `json:"option_text_entities,omitempty"`
+}
+
 // ChecklistTask describes a task in a checklist.
 type ChecklistTask struct {
 	ID              int             `json:"id"`
@@ -6028,7 +6162,7 @@ type GiftInfo struct {
 // OwnedGift describes a gift owned by user/chat with flattened fields.
 type OwnedGift struct {
 	Type                    string          `json:"type"`
-	Gift                    interface{}     `json:"gift"`
+	Gift                    any             `json:"gift"`
 	OwnedGiftID             string          `json:"owned_gift_id,omitempty"`
 	SenderUser              *User           `json:"sender_user,omitempty"`
 	SendDate                int64           `json:"send_date"`

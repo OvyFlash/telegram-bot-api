@@ -787,6 +787,15 @@ func NewKeyboardButtonWebApp(text string, webapp WebAppInfo) KeyboardButton {
 	}
 }
 
+// NewKeyboardButtonRequestManagedBot creates a keyboard button that requests
+// creation of a managed bot.
+func NewKeyboardButtonRequestManagedBot(text string, request KeyboardButtonRequestManagedBot) KeyboardButton {
+	return KeyboardButton{
+		Text:              text,
+		RequestManagedBot: &request,
+	}
+}
+
 // NewKeyboardButtonContact creates a keyboard button that requests
 // user contact information upon click.
 func NewKeyboardButtonContact(text string) KeyboardButton {
@@ -1222,10 +1231,32 @@ func NewSetMyName(languageCode, name string) SetMyNameConfig {
 	}
 }
 
+// NewGetManagedBotToken gets managed bot token request struct.
+func NewGetManagedBotToken(userID int64) GetManagedBotTokenConfig {
+	return GetManagedBotTokenConfig{
+		UserID: userID,
+	}
+}
+
+// NewReplaceManagedBotToken gets managed bot token replacement request struct.
+func NewReplaceManagedBotToken(userID int64) ReplaceManagedBotTokenConfig {
+	return ReplaceManagedBotTokenConfig{
+		UserID: userID,
+	}
+}
+
 // NewGetBusinessConnection gets business connection request struct
 func NewGetBusinessConnection(id string) GetBusinessConnectionConfig {
 	return GetBusinessConnectionConfig{
 		BusinessConnectionID: BusinessConnectionID(id),
+	}
+}
+
+// NewSavePreparedKeyboardButton stores a keyboard button that can be used by a Mini App user.
+func NewSavePreparedKeyboardButton(userID int64, button KeyboardButton) SavePreparedKeyboardButtonConfig {
+	return SavePreparedKeyboardButtonConfig{
+		UserID: userID,
+		Button: button,
 	}
 }
 

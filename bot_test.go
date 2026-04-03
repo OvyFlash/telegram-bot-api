@@ -24,11 +24,11 @@ type testLogger struct {
 	t *testing.T
 }
 
-func (t testLogger) Println(v ...interface{}) {
+func (t testLogger) Println(v ...any) {
 	t.t.Log(v...)
 }
 
-func (t testLogger) Printf(format string, v ...interface{}) {
+func (t testLogger) Printf(format string, v ...any) {
 	t.t.Logf(format, v...)
 }
 

@@ -23,7 +23,7 @@ type BaseChat struct {
 	MessageThreadID         int
 	DirectMessagesTopicID   int
 	ProtectContent          bool
-	ReplyMarkup             interface{}
+	ReplyMarkup             any
 	DisableNotification     bool
 	AllowPaidBroadcast      bool
 	MessageEffectID         string // for private chats only
