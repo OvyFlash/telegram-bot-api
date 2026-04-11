@@ -1936,7 +1936,7 @@ func (SetChatMemberTagConfig) method() string {
 }
 
 func (config SetChatMemberTagConfig) params() (Params, error) {
-	params, err := config.ChatConfig.params()
+	params, err := config.ChatMemberConfig.params()
 	if err != nil {
 		return params, err
 	}
