@@ -203,8 +203,28 @@ func (u *Update) FromChat() *Chat {
 		return &u.ChannelPost.Chat
 	case u.EditedChannelPost != nil:
 		return &u.EditedChannelPost.Chat
+	case u.BusinessMessage != nil:
+		return &u.BusinessMessage.Chat
+	case u.EditedBusinessMessage != nil:
+		return &u.EditedBusinessMessage.Chat
+	case u.DeletedBusinessMessages != nil:
+		return &u.DeletedBusinessMessages.Chat
+	case u.MessageReaction != nil:
+		return &u.MessageReaction.Chat
+	case u.MessageReactionCount != nil:
+		return &u.MessageReactionCount.Chat
 	case u.CallbackQuery != nil && u.CallbackQuery.Message != nil:
 		return &u.CallbackQuery.Message.Chat
+	case u.MyChatMember != nil:
+		return &u.MyChatMember.Chat
+	case u.ChatMember != nil:
+		return &u.ChatMember.Chat
+	case u.ChatJoinRequest != nil:
+		return &u.ChatJoinRequest.Chat
+	case u.ChatBoost != nil:
+		return &u.ChatBoost.Chat
+	case u.ChatBoostRemoved != nil:
+		return &u.ChatBoostRemoved.Chat
 	default:
 		return nil
 	}
