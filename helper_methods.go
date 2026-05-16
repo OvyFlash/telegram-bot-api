@@ -333,8 +333,10 @@ func NewInputMediaDocument(media RequestFileData) InputMediaDocument {
 // NewInputMediaLivePhoto creates a new InputMediaLivePhoto.
 func NewInputMediaLivePhoto(livePhoto, photo RequestFileData) InputMediaLivePhoto {
 	return InputMediaLivePhoto{
-		Type:  "live_photo",
-		Media: livePhoto,
+		BaseInputMedia: BaseInputMedia{
+			Type:  "live_photo",
+			Media: livePhoto,
+		},
 		Photo: photo,
 	}
 }

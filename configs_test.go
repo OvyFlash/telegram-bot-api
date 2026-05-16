@@ -49,8 +49,10 @@ func TestSendPollConfigBotAPI10MediaSerialization(t *testing.T) {
 		Emoji: ":)",
 	}
 	explanationMedia := &InputMediaLivePhoto{
-		Type:  "live_photo",
-		Media: FilePath("tests/video.mp4"),
+		BaseInputMedia: BaseInputMedia{
+			Type:  "live_photo",
+			Media: FilePath("tests/video.mp4"),
+		},
 		Photo: FilePath("tests/image.jpg"),
 	}
 	pollMedia := &InputMediaLocation{

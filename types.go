@@ -4228,14 +4228,8 @@ type InputMediaDocument struct {
 
 // InputMediaLivePhoto represents a live photo to send.
 type InputMediaLivePhoto struct {
-	Type                  string          `json:"type"`
-	Media                 RequestFileData `json:"media"`
-	Photo                 RequestFileData `json:"photo"`
-	Caption               string          `json:"caption,omitempty"`
-	ParseMode             string          `json:"parse_mode,omitempty"`
-	CaptionEntities       []MessageEntity `json:"caption_entities,omitempty"`
-	ShowCaptionAboveMedia bool            `json:"show_caption_above_media,omitempty"`
-	HasSpoiler            bool            `json:"has_spoiler,omitempty"`
+	BaseInputMedia
+	Photo RequestFileData `json:"photo"`
 }
 
 func (media *InputMediaLivePhoto) getType() string {
