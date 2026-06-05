@@ -375,6 +375,13 @@ func (bot *BotAPI) Send(c Chattable) (Message, error) {
 	return message, err
 }
 
+// DeleteMessage deletes a message
+func (bot *BotAPI) DeleteMessage(chatID int64, messageID int) error {
+	req := NewDeleteMessage(chatID, messageID)
+	_, err := bot.Request(req)
+	return err
+}
+
 func (bot *BotAPI) requestBool(c Chattable) (bool, error) {
 	resp, err := bot.Request(c)
 	if err != nil {
