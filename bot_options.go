@@ -1,6 +1,7 @@
 package tgbotapi
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 )
@@ -11,7 +12,7 @@ type botAPIConfig struct {
 	client          HTTPClient
 	debug           bool
 	buffer          int
-	logger          *slog.Logger
+	logger          any
 	loggingDisabled bool
 }
 
@@ -67,14 +68,20 @@ func WithUpdatesBuffer(capacity int) BotAPIOption {
 	}
 }
 
-// WithLogger configures a structured logger for this BotAPI instance.
-func WithLogger(logger *slog.Logger) BotAPIOption {
+// WithLogger configures a logger for this BotAPI instance.
+// Logger should be one of [BotLogger] or [*slog.Logger].
+func WithLogger(logger any) BotAPIOption {
 	return func(config *botAPIConfig) error {
-		if logger == nil {
-			return errNilLogger
+		switch logger.(type) {
+		case nil:
+			config.logger = nil
+			config.loggingDisabled = true
+		case BotLogger, *slog.Logger:
+			config.logger = logger
+			config.loggingDisabled = false
+		default:
+			return fmt.Errorf("invalid type (%T) of logger", logger)
 		}
-		config.logger = logger
-		config.loggingDisabled = false
 		return nil
 	}
 }

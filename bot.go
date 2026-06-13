@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -32,7 +31,7 @@ type BotAPI struct {
 
 	apiEndpoint     string
 	fileEndpoint    string
-	logger          *slog.Logger
+	logger          any
 	loggingDisabled bool
 
 	stoppers []context.CancelFunc
@@ -50,6 +49,8 @@ func NewBotAPI(token string) (*BotAPI, error) {
 // and allows you to pass API endpoint.
 //
 // It requires a token, provided by @BotFather on Telegram and API endpoint.
+//
+// Deprecated: Use [NewBotAPIWithOptions] with [WithAPIEndpoint] instead.
 func NewBotAPIWithAPIEndpoint(token, apiEndpoint string) (*BotAPI, error) {
 	return NewBotAPIWithOptions(token, WithAPIEndpoint(apiEndpoint))
 }
@@ -58,6 +59,8 @@ func NewBotAPIWithAPIEndpoint(token, apiEndpoint string) (*BotAPI, error) {
 // and allows you to pass a http.Client.
 //
 // It requires a token, provided by @BotFather on Telegram and API endpoint.
+//
+// Deprecated: Use [NewBotAPIWithOptions] with [WithAPIEndpoint] and [WithHTTPClient] instead.
 func NewBotAPIWithClient(token, apiEndpoint string, client HTTPClient) (*BotAPI, error) {
 	return NewBotAPIWithOptions(token, WithAPIEndpoint(apiEndpoint), WithHTTPClient(client))
 }

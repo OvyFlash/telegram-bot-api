@@ -6,6 +6,7 @@ import (
 	stdlog "log"
 	"log/slog"
 	"os"
+	"strings"
 )
 
 // BotLogger is an interface that represents the required methods to log data.
@@ -17,14 +18,15 @@ type BotLogger interface {
 	Printf(format string, v ...any)
 }
 
-var errNilLogger = errors.New("logger is nil")
-
 var log BotLogger = stdlog.New(os.Stderr, "", stdlog.LstdFlags)
 
 // SetLogger specifies the logger that the package should use.
+//
+// Deprecated: Use [NewBotAPIWithOptions] with [WithLogger] instead.
+// [SetLogger] will be no-operation later and removed in future.
 func SetLogger(logger BotLogger) error {
 	if logger == nil {
-		return errNilLogger
+		return errors.New("logger is nil")
 	}
 	log = logger
 	return nil
@@ -34,66 +36,106 @@ func (bot *BotAPI) debugLoggingEnabled() bool {
 	return bot.Debug && !bot.loggingDisabled
 }
 
-func (bot *BotAPI) logDebug(ctx context.Context, msg string, args ...any) {
+func (bot *BotAPI) logDebug(ctx context.Context, msg string, attrs ...slog.Attr) {
 	if !bot.debugLoggingEnabled() {
 		return
 	}
-	bot.logMessage(ctx, slog.LevelDebug, msg, args...)
+	bot.logMessage(ctx, slog.LevelDebug, msg, attrs...)
 }
 
 func (bot *BotAPI) logRequestDebug(ctx context.Context, endpoint string, debugInfo requestDebug) {
 	if !bot.debugLoggingEnabled() {
 		return
 	}
-	if bot.logger != nil {
-		args := []any{"endpoint", endpoint, "params", debugInfo.params}
+	switch logger := bot.logger.(type) {
+	case BotLogger:
+		if debugInfo.fileCount > 0 {
+			logger.Printf("[DEBUG] Endpoint: %s, params: %v, with %d files", endpoint, debugInfo.params, debugInfo.fileCount)
+			return
+		}
+		logger.Printf("[DEBUG] Endpoint: %s, params: %v", endpoint, debugInfo.params)
+	case *slog.Logger:
+		args := make([]any, 0, 6)
+		args = append(args,
+			"endpoint", endpoint,
+			"params", debugInfo.params,
+		)
 		if debugInfo.fileCount > 0 {
 			args = append(args, "file_count", debugInfo.fileCount)
 		}
-		bot.logger.DebugContext(ctx, "telegram request", args...)
-		return
+		logger.DebugContext(ctx, "telegram request", args...)
+	default:
+		if debugInfo.fileCount > 0 {
+			log.Printf("[DEBUG] Endpoint: %s, params: %v, with %d files", endpoint, debugInfo.params, debugInfo.fileCount)
+			return
+		}
+		log.Printf("[DEBUG] Endpoint: %s, params: %v", endpoint, debugInfo.params)
 	}
-	if debugInfo.fileCount > 0 {
-		log.Printf("Endpoint: %s, params: %v, with %d files\n", endpoint, debugInfo.params, debugInfo.fileCount)
-		return
-	}
-	log.Printf("Endpoint: %s, params: %v\n", endpoint, debugInfo.params)
 }
 
 func (bot *BotAPI) logResponseDebug(ctx context.Context, endpoint string, response string) {
 	if !bot.debugLoggingEnabled() {
 		return
 	}
-	if bot.logger != nil {
-		bot.logger.DebugContext(ctx, "telegram response", "endpoint", endpoint, "response", response)
-		return
+	switch logger := bot.logger.(type) {
+	case BotLogger:
+		logger.Printf("[DEBUG] Endpoint: %s, response: %s", endpoint, response)
+	case *slog.Logger:
+		logger.DebugContext(ctx, "telegram response",
+			"endpoint", endpoint,
+			"response", response,
+		)
+	default:
+		log.Printf("[DEBUG] Endpoint: %s, response: %s", endpoint, response)
 	}
-	log.Printf("Endpoint: %s, response: %s\n", endpoint, response)
 }
 
 func (bot *BotAPI) logUpdateError(ctx context.Context, err error) {
 	if bot.loggingDisabled {
 		return
 	}
-	if bot.logger != nil {
-		bot.logger.ErrorContext(ctx, "telegram get updates failed", "error", err)
-		bot.logger.InfoContext(ctx, "telegram get updates retry scheduled", "delay", "3s")
-		return
+	switch logger := bot.logger.(type) {
+	case BotLogger:
+		logger.Printf("[DEBUG] Failed to get updates (%s), retrying in 3 seconds...", err)
+	case *slog.Logger:
+		logger.ErrorContext(ctx, "telegram get updates failed",
+			"error", err,
+		)
+		logger.InfoContext(ctx, "telegram get updates retry scheduled",
+			"delay", "3s",
+		)
+	default:
+		log.Printf("[DEBUG] Failed to get updates (%s), retrying in 3 seconds...", err)
 	}
-	log.Println(err)
-	log.Println("Failed to get updates, retrying in 3 seconds...")
 }
 
-func (bot *BotAPI) logMessage(ctx context.Context, level slog.Level, msg string, args ...any) {
-	if bot.logger != nil {
-		bot.logger.Log(ctx, level, msg, args...)
-		return
-	}
+func (bot *BotAPI) logMessage(ctx context.Context, level slog.Level, msg string, attrs ...slog.Attr) {
+	switch logger := bot.logger.(type) {
+	case BotLogger:
+		if len(attrs) == 0 {
+			logger.Printf("[%s] %s", level.String(), msg)
+			return
+		}
 
-	switch len(args) {
-	case 0:
-		log.Println(msg)
+		args := make([]string, 0, len(attrs))
+		for _, attr := range attrs {
+			args = append(args, attr.String())
+		}
+
+		logger.Printf("[%s] %s (%s)", level.String(), msg, strings.Join(args, " "))
+	case *slog.Logger:
+		logger.LogAttrs(ctx, level, msg, attrs...)
 	default:
-		log.Println(append([]any{msg}, args...)...)
+		if len(attrs) == 0 {
+			log.Printf("[%s] %s", level.String(), msg)
+			return
+		}
+
+		args := make([]string, 0, len(attrs))
+		for _, attr := range attrs {
+			args = append(args, attr.String())
+		}
+
+		log.Printf("[%s] %s (%s)", level.String(), msg, strings.Join(args, " "))
 	}
 }
