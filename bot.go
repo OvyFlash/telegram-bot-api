@@ -382,6 +382,175 @@ func (bot *BotAPI) DeleteMessage(chatID int64, messageID int) error {
 	return err
 }
 
+func (bot *BotAPI) EditMessageText(chatID int64, messageID int, text string) (Message, error) {
+	req := NewEditMessageText(chatID, messageID, text)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
+func (bot *BotAPI) EditMessageReplyMarkup(chatID int64, messageID int, replyMarkup InlineKeyboardMarkup) (Message, error) {
+	req := NewEditMessageReplyMarkup(chatID, messageID, replyMarkup)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
+func (bot *BotAPI) EditMessageMedia(chatID int64, messageID int, media InputMedia) (Message, error) {
+	req := NewEditMessageMedia(chatID, messageID, media)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
+func (bot *BotAPI) EditMessageMediaAndMarkup(chatID int64, messageID int, media InputMedia, replyMarkup InlineKeyboardMarkup) (Message, error) {
+	req := NewEditMessageMediaAndMarkup(chatID, messageID, media, replyMarkup)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
+func (bot *BotAPI) EditMessagePhoto(chatID int64, messageID int, media InputMediaPhoto) (Message, error) {
+	req := NewEditMessagePhoto(chatID, messageID, media)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
+func (bot *BotAPI) EditMessageVideo(chatID int64, messageID int, media InputMediaVideo) (Message, error) {
+	req := NewEditMessageVideo(chatID, messageID, media)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
+func (bot *BotAPI) EditMessageAnimation(chatID int64, messageID int, media InputMediaAnimation) (Message, error) {
+	req := NewEditMessageAnimation(chatID, messageID, media)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
+func (bot *BotAPI) EditMessageAudio(chatID int64, messageID int, media InputMediaAudio) (Message, error) {
+	req := NewEditMessageAudio(chatID, messageID, media)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
+func (bot *BotAPI) EditMessageDocument(chatID int64, messageID int, media InputMediaDocument) (Message, error) {
+	req := NewEditMessageDocument(chatID, messageID, media)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
+func (bot *BotAPI) EditMessageCaption(chatID int64, messageID int, caption string) (Message, error) {
+	req := NewEditMessageCaption(chatID, messageID, caption)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
+func (bot *BotAPI) EditMessageTextAndMarkup(chatID int64, messageID int, text string, replyMarkup InlineKeyboardMarkup) (Message, error) {
+	req := NewEditMessageTextAndMarkup(chatID, messageID, text, replyMarkup)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
+func (bot *BotAPI) EditMessageCaptionAndMarkup(chatID int64, messageID int, caption string, replyMarkup InlineKeyboardMarkup) (Message, error) {
+	req := NewEditMessageCaptionAndMarkup(chatID, messageID, caption, replyMarkup)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
+func (bot *BotAPI) EditMessageChecklist(chatID int64, messageID int, checklist InputChecklist) (Message, error) {
+	req := NewEditMessageChecklist(chatID, messageID, checklist)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
 func (bot *BotAPI) requestBool(c Chattable) (bool, error) {
 	resp, err := bot.Request(c)
 	if err != nil {

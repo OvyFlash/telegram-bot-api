@@ -739,6 +739,21 @@ func NewEditMessageMedia(chatID int64, messageID int, inputMedia InputMedia) Edi
 	}
 }
 
+func NewEditMessageMediaAndMarkup(chatID int64, messageID int, inputMedia InputMedia, replyMarkup InlineKeyboardMarkup) EditMessageMediaConfig {
+	return EditMessageMediaConfig{
+		BaseEdit: BaseEdit{
+			BaseChatMessage: BaseChatMessage{
+				ChatConfig: ChatConfig{
+					ChatID: chatID,
+				},
+				MessageID: messageID,
+			},
+			ReplyMarkup: &replyMarkup,
+		},
+		Media: inputMedia,
+	}
+}
+
 // NewEditMessagePhoto allows you to edit the photo content of a message.
 func NewEditMessagePhoto(chatID int64, messageID int, inputPhoto InputMediaPhoto) EditMessageMediaConfig {
 	return NewEditMessageMedia(chatID, messageID, &inputPhoto)
@@ -805,6 +820,22 @@ func NewEditMessageCaption(chatID int64, messageID int, caption string) EditMess
 				},
 				MessageID: messageID,
 			},
+		},
+		Caption: caption,
+	}
+}
+
+// NewEditMessageCaptionAndMarkup allows you to edit the caption and reply markup of a message.
+func NewEditMessageCaptionAndMarkup(chatID int64, messageID int, caption string, replyMarkup InlineKeyboardMarkup) EditMessageCaptionConfig {
+	return EditMessageCaptionConfig{
+		BaseEdit: BaseEdit{
+			BaseChatMessage: BaseChatMessage{
+				ChatConfig: ChatConfig{
+					ChatID: chatID,
+				},
+				MessageID: messageID,
+			},
+			ReplyMarkup: &replyMarkup,
 		},
 		Caption: caption,
 	}

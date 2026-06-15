@@ -1523,3 +1523,58 @@ func TestMediaGroupConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestEditMessageKeyboardBehavior(t *testing.T) {
+	t.Run("nil ReplyMarkup does not send reply_markup", func(t *testing.T) {
+		cfg := NewEditMessageCaption(123, 456, "caption")
+		params, err := cfg.params()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, ok := params["reply_markup"]; ok {
+			t.Errorf("reply_markup must NOT be sent when ReplyMarkup is nil (keyboard must be preserved), got: %s", params["reply_markup"])
+		}
+	})
+
+	t.Run("nil ReplyMarkup on EditMessageText does not send reply_markup", func(t *testing.T) {
+		cfg := NewEditMessageText(123, 456, "text")
+		params, err := cfg.params()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, ok := params["reply_markup"]; ok {
+			t.Errorf("reply_markup must NOT be sent when ReplyMarkup is nil, got: %s", params["reply_markup"])
+		}
+	})
+
+	t.Run("empty InlineKeyboardMarkup removes keyboard", func(t *testing.T) {
+		cfg := NewEditMessageCaption(123, 456, "caption")
+		cfg.ReplyMarkup = &InlineKeyboardMarkup{}
+		params, err := cfg.params()
+		if err != nil {
+			t.Fatal(err)
+		}
+		val, ok := params["reply_markup"]
+		if !ok {
+			t.Fatal("reply_markup must be sent when ReplyMarkup is non-nil")
+		}
+		if val != `{"inline_keyboard":[]}` {
+			t.Errorf("expected inline_keyboard=[], got: %s", val)
+		}
+	})
+
+	t.Run("InlineKeyboardMarkup with buttons sends correct markup", func(t *testing.T) {
+		cfg := NewEditMessageCaption(123, 456, "caption")
+		cb := "ok"
+		cfg.ReplyMarkup = &InlineKeyboardMarkup{
+			InlineKeyboard: [][]InlineKeyboardButton{{{Text: "OK", CallbackData: &cb}}},
+		}
+		params, err := cfg.params()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, ok := params["reply_markup"]; !ok {
+			t.Fatal("reply_markup must be present")
+		}
+	})
+}
