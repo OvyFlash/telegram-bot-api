@@ -2863,17 +2863,6 @@ type InlineKeyboardMarkup struct {
 	InlineKeyboard [][]InlineKeyboardButton `json:"inline_keyboard"`
 }
 
-// MarshalJSON ensures that a nil InlineKeyboard is serialized as an empty array
-// rather than null, so that sending an empty InlineKeyboardMarkup explicitly
-// removes the keyboard instead of producing an invalid {"inline_keyboard":null}.
-func (m InlineKeyboardMarkup) MarshalJSON() ([]byte, error) {
-	type alias InlineKeyboardMarkup
-	if m.InlineKeyboard == nil {
-		m.InlineKeyboard = make([][]InlineKeyboardButton, 0)
-	}
-	return json.Marshal(alias(m))
-}
-
 // InlineKeyboardButton represents one button of an inline keyboard. You must
 // use exactly one of the optional fields.
 //
