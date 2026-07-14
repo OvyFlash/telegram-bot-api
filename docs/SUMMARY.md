@@ -8,7 +8,7 @@
   - [Command Handling](./examples/command-handling.md)
   - [Keyboard](./examples/keyboard.md)
   - [Inline Keyboard](./examples/inline-keyboard.md)
-  - [Bot API 10.0](./examples/bot-api-10.md)
+  - [Bot API 10.x](./examples/bot-api-10.md)
 - [Change Log](./changelog.md)
 
 # Contributing
