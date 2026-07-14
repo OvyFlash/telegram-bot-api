@@ -225,6 +225,154 @@ func prepareInputMediaUploadPlan(inputMedia []InputMedia, prefix string) ([]Inpu
 	return prepared, plan
 }
 
+func prepareInputRichMessageUploadPlan(message InputRichMessage) (InputRichMessage, *uploadPlan) {
+	prepared := message
+	prepared.Media = append([]InputRichMessageMedia(nil), message.Media...)
+	plan := newUploadPlan()
+
+	for idx := range prepared.Media {
+		media := cloneInputMedia(prepared.Media[idx].Media)
+		if media == nil {
+			continue
+		}
+
+		prepareInputMediaItem(media, fmt.Sprintf("rich-message-media-%d", idx), plan)
+		prepared.Media[idx].Media = media
+	}
+
+	prepared.Blocks = prepareInputRichBlocks(message.Blocks, "rich-message-block", plan)
+
+	return prepared, plan
+}
+
+func prepareInputRichBlocks(blocks []InputRichBlock, prefix string, plan *uploadPlan) []InputRichBlock {
+	if blocks == nil {
+		return nil
+	}
+
+	prepared := make([]InputRichBlock, len(blocks))
+	for idx, block := range blocks {
+		prepared[idx] = prepareInputRichBlock(block, fmt.Sprintf("%s-%d", prefix, idx), plan)
+	}
+
+	return prepared
+}
+
+func prepareInputRichBlock(block InputRichBlock, name string, plan *uploadPlan) InputRichBlock {
+	switch current := block.(type) {
+	case InputRichBlockList:
+		return prepareInputRichBlockList(current, name, plan)
+	case *InputRichBlockList:
+		if current == nil {
+			return current
+		}
+		prepared := prepareInputRichBlockList(*current, name, plan)
+		return &prepared
+	case InputRichBlockBlockQuotation:
+		current.Blocks = prepareInputRichBlocks(current.Blocks, name+"-block", plan)
+		return current
+	case *InputRichBlockBlockQuotation:
+		if current == nil {
+			return current
+		}
+		prepared := *current
+		prepared.Blocks = prepareInputRichBlocks(current.Blocks, name+"-block", plan)
+		return &prepared
+	case InputRichBlockCollage:
+		current.Blocks = prepareInputRichBlocks(current.Blocks, name+"-block", plan)
+		return current
+	case *InputRichBlockCollage:
+		if current == nil {
+			return current
+		}
+		prepared := *current
+		prepared.Blocks = prepareInputRichBlocks(current.Blocks, name+"-block", plan)
+		return &prepared
+	case InputRichBlockSlideshow:
+		current.Blocks = prepareInputRichBlocks(current.Blocks, name+"-block", plan)
+		return current
+	case *InputRichBlockSlideshow:
+		if current == nil {
+			return current
+		}
+		prepared := *current
+		prepared.Blocks = prepareInputRichBlocks(current.Blocks, name+"-block", plan)
+		return &prepared
+	case InputRichBlockDetails:
+		current.Blocks = prepareInputRichBlocks(current.Blocks, name+"-block", plan)
+		return current
+	case *InputRichBlockDetails:
+		if current == nil {
+			return current
+		}
+		prepared := *current
+		prepared.Blocks = prepareInputRichBlocks(current.Blocks, name+"-block", plan)
+		return &prepared
+	case InputRichBlockAnimation:
+		prepareInputMediaItem(&current.Animation, name, plan)
+		return current
+	case *InputRichBlockAnimation:
+		if current == nil {
+			return current
+		}
+		prepared := *current
+		prepareInputMediaItem(&prepared.Animation, name, plan)
+		return &prepared
+	case InputRichBlockAudio:
+		prepareInputMediaItem(&current.Audio, name, plan)
+		return current
+	case *InputRichBlockAudio:
+		if current == nil {
+			return current
+		}
+		prepared := *current
+		prepareInputMediaItem(&prepared.Audio, name, plan)
+		return &prepared
+	case InputRichBlockPhoto:
+		prepareInputMediaItem(&current.Photo, name, plan)
+		return current
+	case *InputRichBlockPhoto:
+		if current == nil {
+			return current
+		}
+		prepared := *current
+		prepareInputMediaItem(&prepared.Photo, name, plan)
+		return &prepared
+	case InputRichBlockVideo:
+		prepareInputMediaItem(&current.Video, name, plan)
+		return current
+	case *InputRichBlockVideo:
+		if current == nil {
+			return current
+		}
+		prepared := *current
+		prepareInputMediaItem(&prepared.Video, name, plan)
+		return &prepared
+	case InputRichBlockVoiceNote:
+		prepareInputMediaItem(&current.VoiceNote, name, plan)
+		return current
+	case *InputRichBlockVoiceNote:
+		if current == nil {
+			return current
+		}
+		prepared := *current
+		prepareInputMediaItem(&prepared.VoiceNote, name, plan)
+		return &prepared
+	default:
+		return block
+	}
+}
+
+func prepareInputRichBlockList(block InputRichBlockList, name string, plan *uploadPlan) InputRichBlockList {
+	block.Items = append([]InputRichBlockListItem(nil), block.Items...)
+	for itemIdx := range block.Items {
+		prefix := fmt.Sprintf("%s-item-%d-block", name, itemIdx)
+		block.Items[itemIdx].Blocks = prepareInputRichBlocks(block.Items[itemIdx].Blocks, prefix, plan)
+	}
+
+	return block
+}
+
 func prepareInputMediaItem(media InputMedia, name string, plan *uploadPlan) {
 	if file := media.getMedia(); file != nil && file.NeedsUpload() {
 		media.setUploadMedia("attach://" + name)

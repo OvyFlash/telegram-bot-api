@@ -331,6 +331,31 @@ func (bot *BotAPI) SendRichMessageDraft(config SendRichMessageDraftConfig) (bool
 	return bot.requestBool(config)
 }
 
+// EditEphemeralMessageText edits an ephemeral text message.
+func (bot *BotAPI) EditEphemeralMessageText(config EditEphemeralMessageTextConfig) (bool, error) {
+	return bot.requestBool(config)
+}
+
+// EditEphemeralMessageMedia edits the media of an ephemeral message.
+func (bot *BotAPI) EditEphemeralMessageMedia(config EditEphemeralMessageMediaConfig) (bool, error) {
+	return bot.requestBool(config)
+}
+
+// EditEphemeralMessageCaption edits the caption of an ephemeral message.
+func (bot *BotAPI) EditEphemeralMessageCaption(config EditEphemeralMessageCaptionConfig) (bool, error) {
+	return bot.requestBool(config)
+}
+
+// EditEphemeralMessageReplyMarkup edits the reply markup of an ephemeral message.
+func (bot *BotAPI) EditEphemeralMessageReplyMarkup(config EditEphemeralMessageReplyMarkupConfig) (bool, error) {
+	return bot.requestBool(config)
+}
+
+// DeleteEphemeralMessage deletes an ephemeral message.
+func (bot *BotAPI) DeleteEphemeralMessage(config DeleteEphemeralMessageConfig) (bool, error) {
+	return bot.requestBool(config)
+}
+
 // SendMediaGroup sends a media group and returns the resulting messages.
 func (bot *BotAPI) SendMediaGroup(config MediaGroupConfig) ([]Message, error) {
 	resp, err := bot.Request(config)

@@ -133,6 +133,9 @@ const (
 
 	// UpdateTypeManagedBot is emitted when a managed bot is created or its token changes.
 	UpdateTypeManagedBot = "managed_bot"
+
+	// UpdateTypeSubscription is emitted when a user payment subscription changes.
+	UpdateTypeSubscription = "subscription"
 )
 
 // Library errors
@@ -310,6 +313,8 @@ type MessageConfig struct {
 	ParseMode          string
 	Entities           []MessageEntity
 	LinkPreviewOptions LinkPreviewOptions
+	ReceiverUserID     int64
+	CallbackQueryID    string
 }
 
 func (config MessageConfig) params() (Params, error) {
@@ -320,6 +325,8 @@ func (config MessageConfig) params() (Params, error) {
 
 	params["text"] = config.Text
 	params.AddNonEmpty("parse_mode", config.ParseMode)
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("entities", config.Entities)
 	if err != nil {
 		return params, err
@@ -404,9 +411,14 @@ func (config SendRichMessageConfig) params() (Params, error) {
 		return params, err
 	}
 
-	err = params.AddInterface("rich_message", config.RichMessage)
+	preparedRichMessage := prepareInputRichMessageForParams(config.RichMessage)
+	err = params.AddInterface("rich_message", preparedRichMessage)
 
 	return params, err
+}
+
+func (config SendRichMessageConfig) files() []RequestFile {
+	return prepareInputRichMessageForFiles(config.RichMessage)
 }
 
 // SendRichMessageDraftConfig allows you to stream a partial rich message.
@@ -566,6 +578,8 @@ type PhotoConfig struct {
 	ParseMode             string
 	CaptionEntities       []MessageEntity
 	ShowCaptionAboveMedia bool
+	ReceiverUserID        int64
+	CallbackQueryID       string
 }
 
 func (config PhotoConfig) params() (Params, error) {
@@ -577,6 +591,8 @@ func (config PhotoConfig) params() (Params, error) {
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
 	if err != nil {
 		return params, err
@@ -657,6 +673,8 @@ type AudioConfig struct {
 	Duration        int
 	Performer       string
 	Title           string
+	ReceiverUserID  int64
+	CallbackQueryID string
 }
 
 func (config AudioConfig) params() (Params, error) {
@@ -670,6 +688,8 @@ func (config AudioConfig) params() (Params, error) {
 	params.AddNonEmpty("title", config.Title)
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
 
 	return params, err
@@ -694,6 +714,8 @@ type DocumentConfig struct {
 	ParseMode                   string
 	CaptionEntities             []MessageEntity
 	DisableContentTypeDetection bool
+	ReceiverUserID              int64
+	CallbackQueryID             string
 }
 
 func (config DocumentConfig) params() (Params, error) {
@@ -705,6 +727,8 @@ func (config DocumentConfig) params() (Params, error) {
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("disable_content_type_detection", config.DisableContentTypeDetection)
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
 	if err != nil {
 		return params, err
@@ -729,6 +753,8 @@ type StickerConfig struct {
 	// Emoji associated with the sticker; only for just uploaded stickers
 	Emoji string
 	BaseFile
+	ReceiverUserID  int64
+	CallbackQueryID string
 }
 
 func (config StickerConfig) params() (Params, error) {
@@ -737,6 +763,8 @@ func (config StickerConfig) params() (Params, error) {
 		return params, err
 	}
 	params.AddNonEmpty("emoji", config.Emoji)
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	return params, err
 }
 
@@ -763,6 +791,8 @@ type VideoConfig struct {
 	CaptionEntities       []MessageEntity
 	ShowCaptionAboveMedia bool
 	SupportsStreaming     bool
+	ReceiverUserID        int64
+	CallbackQueryID       string
 }
 
 func (config VideoConfig) params() (Params, error) {
@@ -779,6 +809,8 @@ func (config VideoConfig) params() (Params, error) {
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("supports_streaming", config.SupportsStreaming)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
 	if err != nil {
 		return params, err
@@ -817,6 +849,8 @@ type AnimationConfig struct {
 	ParseMode             string
 	CaptionEntities       []MessageEntity
 	ShowCaptionAboveMedia bool
+	ReceiverUserID        int64
+	CallbackQueryID       string
 }
 
 func (config AnimationConfig) params() (Params, error) {
@@ -831,6 +865,8 @@ func (config AnimationConfig) params() (Params, error) {
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
 	if err != nil {
 		return params, err
@@ -859,9 +895,11 @@ func (config AnimationConfig) files() []RequestFile {
 // VideoNoteConfig contains information about a SendVideoNote request.
 type VideoNoteConfig struct {
 	BaseFile
-	Thumb    RequestFileData
-	Duration int
-	Length   int
+	Thumb           RequestFileData
+	Duration        int
+	Length          int
+	ReceiverUserID  int64
+	CallbackQueryID string
 }
 
 func (config VideoNoteConfig) params() (Params, error) {
@@ -869,6 +907,8 @@ func (config VideoNoteConfig) params() (Params, error) {
 
 	params.AddNonZero("duration", config.Duration)
 	params.AddNonZero("length", config.Length)
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 
 	return params, err
 }
@@ -954,6 +994,8 @@ type VoiceConfig struct {
 	ParseMode       string
 	CaptionEntities []MessageEntity
 	Duration        int
+	ReceiverUserID  int64
+	CallbackQueryID string
 }
 
 func (config VoiceConfig) params() (Params, error) {
@@ -965,6 +1007,8 @@ func (config VoiceConfig) params() (Params, error) {
 	params.AddNonZero("duration", config.Duration)
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
 
 	return params, err
@@ -990,6 +1034,8 @@ type LocationConfig struct {
 	LivePeriod           int     // optional
 	Heading              int     // optional
 	ProximityAlertRadius int     // optional
+	ReceiverUserID       int64
+	CallbackQueryID      string
 }
 
 func (config LocationConfig) params() (Params, error) {
@@ -1001,6 +1047,8 @@ func (config LocationConfig) params() (Params, error) {
 	params.AddNonZero("live_period", config.LivePeriod)
 	params.AddNonZero("heading", config.Heading)
 	params.AddNonZero("proximity_alert_radius", config.ProximityAlertRadius)
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 
 	return params, err
 }
@@ -1061,6 +1109,8 @@ type VenueConfig struct {
 	FoursquareType  string
 	GooglePlaceID   string
 	GooglePlaceType string
+	ReceiverUserID  int64
+	CallbackQueryID string
 }
 
 func (config VenueConfig) params() (Params, error) {
@@ -1074,6 +1124,8 @@ func (config VenueConfig) params() (Params, error) {
 	params.AddNonEmpty("foursquare_type", config.FoursquareType)
 	params.AddNonEmpty("google_place_id", config.GooglePlaceID)
 	params.AddNonEmpty("google_place_type", config.GooglePlaceType)
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 
 	return params, err
 }
@@ -1085,10 +1137,12 @@ func (config VenueConfig) method() string {
 // ContactConfig allows you to send a contact.
 type ContactConfig struct {
 	BaseChat
-	PhoneNumber string
-	FirstName   string
-	LastName    string
-	VCard       string
+	PhoneNumber     string
+	FirstName       string
+	LastName        string
+	VCard           string
+	ReceiverUserID  int64
+	CallbackQueryID string
 }
 
 func (config ContactConfig) params() (Params, error) {
@@ -1099,6 +1153,8 @@ func (config ContactConfig) params() (Params, error) {
 
 	params.AddNonEmpty("last_name", config.LastName)
 	params.AddNonEmpty("vcard", config.VCard)
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 
 	return params, err
 }
@@ -1345,11 +1401,12 @@ func (config EditMessageTextConfig) params() (Params, error) {
 	if err != nil {
 		return params, err
 	}
-	if config.RichMessage != (InputRichMessage{}) {
-		err = params.AddInterface("rich_message", config.RichMessage)
-		if err != nil {
-			return params, err
-		}
+	richMessage := config.RichMessage
+	if config.InlineMessageID == "" {
+		richMessage = prepareInputRichMessageForParams(richMessage)
+	}
+	if err = params.AddInterfaceNonZero("rich_message", richMessage); err != nil {
+		return params, err
 	}
 	err = params.AddInterfaceNonZero("link_preview_options", config.LinkPreviewOptions)
 
@@ -1358,6 +1415,14 @@ func (config EditMessageTextConfig) params() (Params, error) {
 
 func (config EditMessageTextConfig) method() string {
 	return "editMessageText"
+}
+
+func (config EditMessageTextConfig) files() []RequestFile {
+	if config.InlineMessageID != "" {
+		return nil
+	}
+
+	return prepareInputRichMessageForFiles(config.RichMessage)
 }
 
 // EditMessageCaptionConfig allows you to modify the caption of a message.
@@ -1427,6 +1492,127 @@ func (config EditMessageReplyMarkupConfig) params() (Params, error) {
 
 func (config EditMessageReplyMarkupConfig) method() string {
 	return "editMessageReplyMarkup"
+}
+
+// EditEphemeralMessageTextConfig edits an ephemeral text message.
+type EditEphemeralMessageTextConfig struct {
+	BaseEphemeralMessage
+	Text               string
+	ParseMode          string
+	Entities           []MessageEntity
+	LinkPreviewOptions LinkPreviewOptions
+	ReplyMarkup        *InlineKeyboardMarkup
+}
+
+func (config EditEphemeralMessageTextConfig) params() (Params, error) {
+	params, err := config.BaseEphemeralMessage.params()
+	if err != nil {
+		return params, err
+	}
+
+	params["text"] = config.Text
+	params.AddNonEmpty("parse_mode", config.ParseMode)
+	if err = params.AddInterface("entities", config.Entities); err != nil {
+		return params, err
+	}
+	if err = params.AddInterfaceNonZero("link_preview_options", config.LinkPreviewOptions); err != nil {
+		return params, err
+	}
+	err = params.AddInterface("reply_markup", config.ReplyMarkup)
+
+	return params, err
+}
+
+func (EditEphemeralMessageTextConfig) method() string {
+	return "editEphemeralMessageText"
+}
+
+// EditEphemeralMessageMediaConfig edits the media of an ephemeral message.
+type EditEphemeralMessageMediaConfig struct {
+	BaseEphemeralMessage
+	Media       InputMedia
+	ReplyMarkup *InlineKeyboardMarkup
+}
+
+func (config EditEphemeralMessageMediaConfig) params() (Params, error) {
+	params, err := config.BaseEphemeralMessage.params()
+	if err != nil {
+		return params, err
+	}
+
+	if err = params.AddInterface("media", config.Media); err != nil {
+		return params, err
+	}
+	err = params.AddInterface("reply_markup", config.ReplyMarkup)
+
+	return params, err
+}
+
+func (EditEphemeralMessageMediaConfig) method() string {
+	return "editEphemeralMessageMedia"
+}
+
+// EditEphemeralMessageCaptionConfig edits the caption of an ephemeral message.
+type EditEphemeralMessageCaptionConfig struct {
+	BaseEphemeralMessage
+	Caption         string
+	ParseMode       string
+	CaptionEntities []MessageEntity
+	ReplyMarkup     *InlineKeyboardMarkup
+}
+
+func (config EditEphemeralMessageCaptionConfig) params() (Params, error) {
+	params, err := config.BaseEphemeralMessage.params()
+	if err != nil {
+		return params, err
+	}
+
+	params["caption"] = config.Caption
+	params.AddNonEmpty("parse_mode", config.ParseMode)
+	if err = params.AddInterface("caption_entities", config.CaptionEntities); err != nil {
+		return params, err
+	}
+	err = params.AddInterface("reply_markup", config.ReplyMarkup)
+
+	return params, err
+}
+
+func (EditEphemeralMessageCaptionConfig) method() string {
+	return "editEphemeralMessageCaption"
+}
+
+// EditEphemeralMessageReplyMarkupConfig edits the reply markup of an ephemeral message.
+type EditEphemeralMessageReplyMarkupConfig struct {
+	BaseEphemeralMessage
+	ReplyMarkup *InlineKeyboardMarkup
+}
+
+func (config EditEphemeralMessageReplyMarkupConfig) params() (Params, error) {
+	params, err := config.BaseEphemeralMessage.params()
+	if err != nil {
+		return params, err
+	}
+
+	err = params.AddInterface("reply_markup", config.ReplyMarkup)
+
+	return params, err
+}
+
+func (EditEphemeralMessageReplyMarkupConfig) method() string {
+	return "editEphemeralMessageReplyMarkup"
+}
+
+// DeleteEphemeralMessageConfig deletes an ephemeral message.
+type DeleteEphemeralMessageConfig struct {
+	BaseEphemeralMessage
+}
+
+func (config DeleteEphemeralMessageConfig) params() (Params, error) {
+	return config.BaseEphemeralMessage.params()
+}
+
+func (DeleteEphemeralMessageConfig) method() string {
+	return "deleteEphemeralMessage"
 }
 
 // EditMessageChecklistConfig allows you to edit checklist of a message.
@@ -4656,6 +4842,16 @@ func prepareInputStoryContentForFiles(content InputStoryContent) []RequestFile {
 	return plan.Files()
 }
 
+func prepareInputRichMessageForParams(message InputRichMessage) InputRichMessage {
+	prepared, _ := prepareInputRichMessageUploadPlan(message)
+	return prepared
+}
+
+func prepareInputRichMessageForFiles(message InputRichMessage) []RequestFile {
+	_, plan := prepareInputRichMessageUploadPlan(message)
+	return plan.Files()
+}
+
 func prepareInputStickersForParams(stickers []InputSticker) []InputSticker {
 	prepared := make([]InputSticker, len(stickers))
 	for idx := range stickers {
@@ -4744,6 +4940,8 @@ func cloneInputMedia(media InputMedia) InputMedia {
 	case *InputMediaAudio:
 		return ptr(*m)
 	case *InputMediaDocument:
+		return ptr(*m)
+	case *InputMediaVoiceNote:
 		return ptr(*m)
 	case *InputMediaLivePhoto:
 		return ptr(*m)
