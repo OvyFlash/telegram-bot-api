@@ -921,24 +921,16 @@ func newBaseEphemeralMessage(chatID, receiverUserID int64, ephemeralMessageID in
 	}
 }
 
-// NewEphemeralMessage creates a new EphemeralMessage.
+// NewEphemeralMessage creates a text message visible only to receiverUserID.
 //
-// chatID is where to send it, receiverID is userID, text is the message text.
-func NewEphemeralMessage(chatID int64, receiverID int64, text string) MessageConfig {
-	return MessageConfig{
-		BaseChat: BaseChat{
-			ChatConfig: ChatConfig{
-				ChatID: chatID,
-			},
-		},
-		Text:           text,
-		ReceiverUserID: receiverID,
-		LinkPreviewOptions: LinkPreviewOptions{
-			IsDisabled: false,
-		},
-	}
+// Bot administrators can send the returned config directly. Other bots must
+// additionally set CallbackQueryID or ReplyParameters.EphemeralMessageID
+// within 15 seconds of an eligible action.
+func NewEphemeralMessage(chatID, receiverUserID int64, text string) MessageConfig {
+	config := NewMessage(chatID, text)
+	config.ReceiverUserID = receiverUserID
+	return config
 }
-
 
 // NewEditEphemeralMessageText creates a request to edit ephemeral message text.
 func NewEditEphemeralMessageText(chatID, receiverUserID int64, ephemeralMessageID int, text string) EditEphemeralMessageTextConfig {

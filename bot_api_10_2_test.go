@@ -152,6 +152,23 @@ func TestBotAPI102ReplyParametersIdentifiers(t *testing.T) {
 	}
 }
 
+func TestBotAPI102NewEphemeralMessageDirectAdminParams(t *testing.T) {
+	config := NewEphemeralMessage(-1001, 42, "private")
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params: %v", err)
+	}
+	if params["chat_id"] != "-1001" || params["receiver_user_id"] != "42" || params["text"] != "private" {
+		t.Fatalf("direct admin ephemeral params mismatch: %#v", params)
+	}
+	if _, ok := params["callback_query_id"]; ok {
+		t.Fatalf("direct admin request unexpectedly contains callback query: %#v", params)
+	}
+	if _, ok := params["reply_parameters"]; ok {
+		t.Fatalf("direct admin request unexpectedly contains reply parameters: %#v", params)
+	}
+}
+
 func TestBotAPI102EphemeralSendParams(t *testing.T) {
 	message := NewMessage(1, "text")
 	message.ReceiverUserID, message.CallbackQueryID = 42, "callback"
