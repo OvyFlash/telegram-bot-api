@@ -921,6 +921,25 @@ func newBaseEphemeralMessage(chatID, receiverUserID int64, ephemeralMessageID in
 	}
 }
 
+// NewEphemeralMessage creates a new EphemeralMessage.
+//
+// chatID is where to send it, receiverID is userID, text is the message text.
+func NewEphemeralMessage(chatID int64, receiverID int64, text string) MessageConfig {
+	return MessageConfig{
+		BaseChat: BaseChat{
+			ChatConfig: ChatConfig{
+				ChatID: chatID,
+			},
+		},
+		Text:           text,
+		ReceiverUserID: receiverID,
+		LinkPreviewOptions: tgbotapi.LinkPreviewOptions{
+			IsDisabled: false,
+		},
+	}
+}
+
+
 // NewEditEphemeralMessageText creates a request to edit ephemeral message text.
 func NewEditEphemeralMessageText(chatID, receiverUserID int64, ephemeralMessageID int, text string) EditEphemeralMessageTextConfig {
 	return EditEphemeralMessageTextConfig{
