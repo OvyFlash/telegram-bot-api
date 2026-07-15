@@ -628,6 +628,8 @@ type SendLivePhotoConfig struct {
 	ParseMode             string
 	CaptionEntities       []MessageEntity
 	ShowCaptionAboveMedia bool
+	ReceiverUserID        int64
+	CallbackQueryID       string
 }
 
 func (config SendLivePhotoConfig) params() (Params, error) {
@@ -639,6 +641,8 @@ func (config SendLivePhotoConfig) params() (Params, error) {
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	if err = params.AddInterface("caption_entities", config.CaptionEntities); err != nil {
 		return params, err
 	}

@@ -180,6 +180,8 @@ func TestBotAPI102EphemeralSendParams(t *testing.T) {
 	document.ReceiverUserID, document.CallbackQueryID = 42, "callback"
 	photo := NewPhoto(1, FileID("photo"))
 	photo.ReceiverUserID, photo.CallbackQueryID = 42, "callback"
+	livePhoto := NewLivePhoto(1, FileID("live-photo"), FileID("photo"))
+	livePhoto.ReceiverUserID, livePhoto.CallbackQueryID = 42, "callback"
 	sticker := NewSticker(1, FileID("sticker"))
 	sticker.ReceiverUserID, sticker.CallbackQueryID = 42, "callback"
 	video := NewVideo(1, FileID("video"))
@@ -204,6 +206,7 @@ func TestBotAPI102EphemeralSendParams(t *testing.T) {
 		{method: "sendAudio", config: audio},
 		{method: "sendDocument", config: document},
 		{method: "sendPhoto", config: photo},
+		{method: "sendLivePhoto", config: livePhoto},
 		{method: "sendSticker", config: sticker},
 		{method: "sendVideo", config: video},
 		{method: "sendVideoNote", config: videoNote},
