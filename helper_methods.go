@@ -933,7 +933,7 @@ func NewEphemeralMessage(chatID int64, receiverID int64, text string) MessageCon
 		},
 		Text:           text,
 		ReceiverUserID: receiverID,
-		LinkPreviewOptions: tgbotapi.LinkPreviewOptions{
+		LinkPreviewOptions: LinkPreviewOptions{
 			IsDisabled: false,
 		},
 	}
