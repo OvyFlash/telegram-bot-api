@@ -5,11 +5,20 @@ var (
 	_ Chattable = EditMessageChecklistConfig{}
 	_ Chattable = SendLivePhotoConfig{}
 	_ Chattable = SendMessageDraftConfig{}
+	_ Chattable = SendRichMessageConfig{}
+	_ Chattable = SendRichMessageDraftConfig{}
+	_ Chattable = EditEphemeralMessageTextConfig{}
+	_ Chattable = EditEphemeralMessageMediaConfig{}
+	_ Chattable = EditEphemeralMessageCaptionConfig{}
+	_ Chattable = EditEphemeralMessageReplyMarkupConfig{}
+	_ Chattable = DeleteEphemeralMessageConfig{}
 	_ Chattable = ApproveSuggestedPostConfig{}
 	_ Chattable = DeclineSuggestedPostConfig{}
 	_ Chattable = UserProfileAudiosConfig{}
 	_ Chattable = UserPersonalChatMessagesConfig{}
 	_ Chattable = AnswerGuestQueryConfig{}
+	_ Chattable = AnswerChatJoinRequestQueryConfig{}
+	_ Chattable = SendChatJoinRequestWebAppConfig{}
 	_ Chattable = DeleteMessageReactionConfig{}
 	_ Chattable = DeleteAllMessageReactionsConfig{}
 	_ Chattable = SetPassportDataErrorsConfig{}
@@ -46,6 +55,8 @@ var (
 var (
 	_ Fileable = SetMyProfilePhotoConfig{}
 	_ Fileable = SendLivePhotoConfig{}
+	_ Fileable = SendRichMessageConfig{}
+	_ Fileable = EditMessageTextConfig{}
 	_ Fileable = SendPollConfig{}
 	_ Fileable = SetBusinessAccountProfilePhotoConfig{}
 	_ Fileable = PostStoryConfig{}
@@ -60,4 +71,6 @@ var (
 	_ InlineQueryResultMpeg4Gif
 	_ InlineQueryResultCachedMpeg4Gif
 	_ TransactionPartnerTelegramApi
+	_ InputMedia = (*InputMediaLink)(nil)
+	_ InputMedia = (*InputMediaVoiceNote)(nil)
 )

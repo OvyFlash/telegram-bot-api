@@ -163,6 +163,10 @@ type Update struct {
 	//
 	// optional
 	ManagedBot *ManagedBotUpdated `json:"managed_bot,omitempty"`
+	// Subscription is emitted when a user payment subscription changes.
+	//
+	// optional
+	Subscription *BotSubscriptionUpdated `json:"subscription,omitempty"`
 }
 
 // SentFrom returns the user who sent an update. Can be nil, if Telegram did not provide information
@@ -213,6 +217,8 @@ func (u *Update) SentFrom() *User {
 		return u.ChatBoostRemoved.Source.User
 	case u.ManagedBot != nil:
 		return &u.ManagedBot.Bot
+	case u.Subscription != nil:
+		return &u.Subscription.User
 	default:
 		return nil
 	}
@@ -349,6 +355,11 @@ type User struct {
 	//
 	// optional
 	CanManageBots bool `json:"can_manage_bots,omitempty"`
+	// SupportsJoinRequestQueries is true, if the bot supports join request queries.
+	// Returned only in getMe.
+	//
+	// optional
+	SupportsJoinRequestQueries bool `json:"supports_join_request_queries,omitempty"`
 }
 
 // String displays a simple text version of a user.
@@ -618,6 +629,14 @@ type ChatFullInfo struct {
 	//
 	// optional
 	PaidMessageStarCount int `json:"paid_message_star_count,omitempty"`
+	// GuardBot is the bot that processes join request queries in the chat.
+	//
+	// optional
+	GuardBot *User `json:"guard_bot,omitempty"`
+	// Community is the community to which the chat belongs.
+	//
+	// optional
+	Community *Community `json:"community,omitempty"`
 }
 
 // IsPrivate returns if the Chat is a private conversation.
@@ -657,8 +676,17 @@ type InaccessibleMessage struct {
 
 // Message represents a message.
 type Message struct {
-	// MessageID is a unique message identifier inside this chat
+	// MessageID is a unique message identifier inside this chat; it is 0 for ephemeral messages.
 	MessageID int `json:"message_id"`
+	// ReceiverUser is the user who received an ephemeral message.
+	//
+	// optional
+	ReceiverUser *User `json:"receiver_user,omitempty"`
+	// EphemeralMessageID is the identifier of an ephemeral message inside the chat.
+	// It may be reused after the message is deleted or expires.
+	//
+	// optional
+	EphemeralMessageID int `json:"ephemeral_message_id,omitempty"`
 	// Unique identifier of a message thread to which the message belongs;
 	// for supergroups only
 	//
@@ -812,6 +840,10 @@ type Message struct {
 	//
 	// optional
 	EffectID string `json:"effect_id,omitempty"`
+	// RichMessage is a rich formatted message.
+	//
+	// optional
+	RichMessage *RichMessage `json:"rich_message,omitempty"`
 	// Animation message is an animation, information about the animation.
 	// For backward compatibility, when this field is set, the document field will also be set;
 	//
@@ -1053,6 +1085,14 @@ type Message struct {
 	//
 	// optional
 	ChecklistTasksAdded *ChecklistTasksAdded `json:"checklist_tasks_added,omitempty"`
+	// CommunityChatAdded is a service message about a chat being added to a community.
+	//
+	// optional
+	CommunityChatAdded *CommunityChatAdded `json:"community_chat_added,omitempty"`
+	// CommunityChatRemoved is a service message about a chat being removed from a community.
+	//
+	// optional
+	CommunityChatRemoved *CommunityChatRemoved `json:"community_chat_removed,omitempty"`
 	// DirectMessagePriceChanged is a service message for direct message price changes.
 	//
 	// optional
@@ -1490,12 +1530,18 @@ type ExternalReplyInfo struct {
 type ReplyParameters struct {
 	// MessageID identifier of the message that will be replied to in
 	// the current chat, or in the chat chat_id if it is specified
-	MessageID int `json:"message_id"`
+	//
+	// optional if EphemeralMessageID is specified
+	MessageID int `json:"message_id,omitempty"`
 	// ChatID if the message to be replied to is from a different chat,
 	// unique identifier for the chat or username of the channel (in the format @channelusername)
 	//
 	// optional
 	ChatID any `json:"chat_id,omitempty"`
+	// EphemeralMessageID identifies the incoming ephemeral message to reply to.
+	//
+	// optional if MessageID is specified
+	EphemeralMessageID int `json:"ephemeral_message_id,omitempty"`
 	// AllowSendingWithoutReply true if the message should be sent even
 	// if the specified message to be replied to is not found;
 	// can be used only for replies in the same chat and forum topic.
@@ -1958,6 +2004,7 @@ type PollMedia struct {
 	Animation *Animation  `json:"animation,omitempty"`
 	Audio     *Audio      `json:"audio,omitempty"`
 	Document  *Document   `json:"document,omitempty"`
+	Link      *Link       `json:"link,omitempty"`
 	LivePhoto *LivePhoto  `json:"live_photo,omitempty"`
 	Location  *Location   `json:"location,omitempty"`
 	Photo     []PhotoSize `json:"photo,omitempty"`
@@ -2567,6 +2614,535 @@ type LinkPreviewOptions struct {
 	//
 	// optional
 	ShowAboveText bool `json:"show_above_text,omitempty"`
+}
+
+// Link represents an HTTP link.
+type Link struct {
+	URL string `json:"url"`
+}
+
+// RichMessage describes a rich formatted message.
+type RichMessage struct {
+	Blocks []RichBlock `json:"blocks"`
+	IsRTL  bool        `json:"is_rtl,omitempty"`
+}
+
+// InputRichMessage describes a rich message to be sent.
+type InputRichMessage struct {
+	Blocks              []InputRichBlock        `json:"blocks,omitempty"`
+	HTML                string                  `json:"html,omitempty"`
+	Markdown            string                  `json:"markdown,omitempty"`
+	Media               []InputRichMessageMedia `json:"media,omitempty"`
+	IsRTL               bool                    `json:"is_rtl,omitempty"`
+	SkipEntityDetection bool                    `json:"skip_entity_detection,omitempty"`
+}
+
+// InputRichMessageMedia describes media embedded in an outgoing rich message.
+type InputRichMessageMedia struct {
+	ID    string     `json:"id"`
+	Media InputMedia `json:"media"`
+}
+
+// RichText represents any rich formatted text value.
+type RichText any
+
+// RichTextBold describes bold text.
+type RichTextBold struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// RichTextItalic describes italic text.
+type RichTextItalic struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// RichTextUnderline describes underlined text.
+type RichTextUnderline struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// RichTextStrikethrough describes strikethrough text.
+type RichTextStrikethrough struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// RichTextSpoiler describes spoiler text.
+type RichTextSpoiler struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// RichTextDateTime describes formatted date and time text.
+type RichTextDateTime struct {
+	Type           string   `json:"type"`
+	Text           RichText `json:"text"`
+	UnixTime       int64    `json:"unix_time"`
+	DateTimeFormat string   `json:"date_time_format"`
+}
+
+// RichTextTextMention describes a rich text user mention.
+type RichTextTextMention struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+	User User     `json:"user"`
+}
+
+// RichTextSubscript describes subscript text.
+type RichTextSubscript struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// RichTextSuperscript describes superscript text.
+type RichTextSuperscript struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// RichTextMarked describes marked text.
+type RichTextMarked struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// RichTextCode describes monowidth text.
+type RichTextCode struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// RichTextCustomEmoji describes a custom emoji.
+type RichTextCustomEmoji struct {
+	Type            string `json:"type"`
+	CustomEmojiID   string `json:"custom_emoji_id"`
+	AlternativeText string `json:"alternative_text"`
+}
+
+// RichTextMathematicalExpression describes an inline mathematical expression.
+type RichTextMathematicalExpression struct {
+	Type       string `json:"type"`
+	Expression string `json:"expression"`
+}
+
+// RichTextUrl describes text with a link.
+type RichTextUrl struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+	URL  string   `json:"url"`
+}
+
+// RichTextEmailAddress describes text with an email address.
+type RichTextEmailAddress struct {
+	Type         string   `json:"type"`
+	Text         RichText `json:"text"`
+	EmailAddress string   `json:"email_address"`
+}
+
+// RichTextPhoneNumber describes text with a phone number.
+type RichTextPhoneNumber struct {
+	Type        string   `json:"type"`
+	Text        RichText `json:"text"`
+	PhoneNumber string   `json:"phone_number"`
+}
+
+// RichTextBankCardNumber describes text with a bank card number.
+type RichTextBankCardNumber struct {
+	Type           string   `json:"type"`
+	Text           RichText `json:"text"`
+	BankCardNumber string   `json:"bank_card_number"`
+}
+
+// RichTextMention describes text with a username mention.
+type RichTextMention struct {
+	Type     string   `json:"type"`
+	Text     RichText `json:"text"`
+	Username string   `json:"username"`
+}
+
+// RichTextHashtag describes text with a hashtag.
+type RichTextHashtag struct {
+	Type    string   `json:"type"`
+	Text    RichText `json:"text"`
+	Hashtag string   `json:"hashtag"`
+}
+
+// RichTextCashtag describes text with a cashtag.
+type RichTextCashtag struct {
+	Type    string   `json:"type"`
+	Text    RichText `json:"text"`
+	Cashtag string   `json:"cashtag"`
+}
+
+// RichTextBotCommand describes text with a bot command.
+type RichTextBotCommand struct {
+	Type       string   `json:"type"`
+	Text       RichText `json:"text"`
+	BotCommand string   `json:"bot_command"`
+}
+
+// RichTextAnchor describes an anchor.
+type RichTextAnchor struct {
+	Type string `json:"type"`
+	Name string `json:"name"`
+}
+
+// RichTextAnchorLink describes text linking to an anchor.
+type RichTextAnchorLink struct {
+	Type       string   `json:"type"`
+	Text       RichText `json:"text"`
+	AnchorName string   `json:"anchor_name"`
+}
+
+// RichTextReference describes text with a reference name.
+type RichTextReference struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+	Name string   `json:"name"`
+}
+
+// RichTextReferenceLink describes text linking to a reference.
+type RichTextReferenceLink struct {
+	Type          string   `json:"type"`
+	Text          RichText `json:"text"`
+	ReferenceName string   `json:"reference_name"`
+}
+
+// RichBlockCaption describes a rich block caption.
+type RichBlockCaption struct {
+	Text   RichText `json:"text"`
+	Credit RichText `json:"credit,omitempty"`
+}
+
+// RichBlockTableCell describes a rich table cell.
+type RichBlockTableCell struct {
+	Text     RichText `json:"text,omitempty"`
+	IsHeader bool     `json:"is_header,omitempty"`
+	Colspan  int      `json:"colspan,omitempty"`
+	Rowspan  int      `json:"rowspan,omitempty"`
+	Align    string   `json:"align"`
+	Valign   string   `json:"valign"`
+}
+
+// RichBlockListItem describes an item in a rich list.
+type RichBlockListItem struct {
+	Label       string      `json:"label"`
+	Blocks      []RichBlock `json:"blocks"`
+	HasCheckbox bool        `json:"has_checkbox,omitempty"`
+	IsChecked   bool        `json:"is_checked,omitempty"`
+	Value       int         `json:"value,omitempty"`
+	Type        string      `json:"type,omitempty"`
+}
+
+// RichBlock represents any rich message block.
+type RichBlock any
+
+// RichBlockParagraph describes a paragraph block.
+type RichBlockParagraph struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// RichBlockSectionHeading describes a heading block.
+type RichBlockSectionHeading struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+	Size int      `json:"size"`
+}
+
+// RichBlockPreformatted describes a preformatted block.
+type RichBlockPreformatted struct {
+	Type     string   `json:"type"`
+	Text     RichText `json:"text"`
+	Language string   `json:"language,omitempty"`
+}
+
+// RichBlockFooter describes a footer block.
+type RichBlockFooter struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// RichBlockDivider describes a divider block.
+type RichBlockDivider struct {
+	Type string `json:"type"`
+}
+
+// RichBlockMathematicalExpression describes a block mathematical expression.
+type RichBlockMathematicalExpression struct {
+	Type       string `json:"type"`
+	Expression string `json:"expression"`
+}
+
+// RichBlockAnchor describes an anchor block.
+type RichBlockAnchor struct {
+	Type string `json:"type"`
+	Name string `json:"name"`
+}
+
+// RichBlockList describes a list block.
+type RichBlockList struct {
+	Type  string              `json:"type"`
+	Items []RichBlockListItem `json:"items"`
+}
+
+// RichBlockBlockQuotation describes a block quotation.
+type RichBlockBlockQuotation struct {
+	Type   string      `json:"type"`
+	Blocks []RichBlock `json:"blocks"`
+	Credit RichText    `json:"credit,omitempty"`
+}
+
+// RichBlockPullQuotation describes a pull quotation.
+type RichBlockPullQuotation struct {
+	Type   string   `json:"type"`
+	Text   RichText `json:"text"`
+	Credit RichText `json:"credit,omitempty"`
+}
+
+// RichBlockCollage describes a collage block.
+type RichBlockCollage struct {
+	Type    string            `json:"type"`
+	Blocks  []RichBlock       `json:"blocks"`
+	Caption *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// RichBlockSlideshow describes a slideshow block.
+type RichBlockSlideshow struct {
+	Type    string            `json:"type"`
+	Blocks  []RichBlock       `json:"blocks"`
+	Caption *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// RichBlockTable describes a table block.
+type RichBlockTable struct {
+	Type       string                 `json:"type"`
+	Cells      [][]RichBlockTableCell `json:"cells"`
+	IsBordered bool                   `json:"is_bordered,omitempty"`
+	IsStriped  bool                   `json:"is_striped,omitempty"`
+	Caption    RichText               `json:"caption,omitempty"`
+}
+
+// RichBlockDetails describes an expandable details block.
+type RichBlockDetails struct {
+	Type    string      `json:"type"`
+	Summary RichText    `json:"summary"`
+	Blocks  []RichBlock `json:"blocks"`
+	IsOpen  bool        `json:"is_open,omitempty"`
+}
+
+// RichBlockMap describes a map block.
+type RichBlockMap struct {
+	Type     string            `json:"type"`
+	Location Location          `json:"location"`
+	Zoom     int               `json:"zoom"`
+	Width    int               `json:"width"`
+	Height   int               `json:"height"`
+	Caption  *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// RichBlockAnimation describes an animation block.
+type RichBlockAnimation struct {
+	Type       string            `json:"type"`
+	Animation  Animation         `json:"animation"`
+	HasSpoiler bool              `json:"has_spoiler,omitempty"`
+	Caption    *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// RichBlockAudio describes an audio block.
+type RichBlockAudio struct {
+	Type    string            `json:"type"`
+	Audio   Audio             `json:"audio"`
+	Caption *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// RichBlockPhoto describes a photo block.
+type RichBlockPhoto struct {
+	Type       string            `json:"type"`
+	Photo      []PhotoSize       `json:"photo"`
+	HasSpoiler bool              `json:"has_spoiler,omitempty"`
+	Caption    *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// RichBlockVideo describes a video block.
+type RichBlockVideo struct {
+	Type       string            `json:"type"`
+	Video      Video             `json:"video"`
+	HasSpoiler bool              `json:"has_spoiler,omitempty"`
+	Caption    *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// RichBlockVoiceNote describes a voice note block.
+type RichBlockVoiceNote struct {
+	Type      string            `json:"type"`
+	VoiceNote Voice             `json:"voice_note"`
+	Caption   *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// RichBlockThinking describes a thinking placeholder block.
+type RichBlockThinking struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// InputRichBlockListItem describes an item in an outgoing rich list.
+type InputRichBlockListItem struct {
+	Blocks      []InputRichBlock `json:"blocks"`
+	HasCheckbox bool             `json:"has_checkbox,omitempty"`
+	IsChecked   bool             `json:"is_checked,omitempty"`
+	Value       int              `json:"value,omitempty"`
+	Type        string           `json:"type,omitempty"`
+}
+
+// InputRichBlock represents any outgoing rich message block.
+type InputRichBlock any
+
+// InputRichBlockParagraph describes an outgoing paragraph block.
+type InputRichBlockParagraph struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// InputRichBlockSectionHeading describes an outgoing heading block.
+type InputRichBlockSectionHeading struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+	Size int      `json:"size"`
+}
+
+// InputRichBlockPreformatted describes an outgoing preformatted block.
+type InputRichBlockPreformatted struct {
+	Type     string   `json:"type"`
+	Text     RichText `json:"text"`
+	Language string   `json:"language,omitempty"`
+}
+
+// InputRichBlockFooter describes an outgoing footer block.
+type InputRichBlockFooter struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
+}
+
+// InputRichBlockDivider describes an outgoing divider block.
+type InputRichBlockDivider struct {
+	Type string `json:"type"`
+}
+
+// InputRichBlockMathematicalExpression describes an outgoing mathematical expression block.
+type InputRichBlockMathematicalExpression struct {
+	Type       string `json:"type"`
+	Expression string `json:"expression"`
+}
+
+// InputRichBlockAnchor describes an outgoing anchor block.
+type InputRichBlockAnchor struct {
+	Type string `json:"type"`
+	Name string `json:"name"`
+}
+
+// InputRichBlockList describes an outgoing list block.
+type InputRichBlockList struct {
+	Type  string                   `json:"type"`
+	Items []InputRichBlockListItem `json:"items"`
+}
+
+// InputRichBlockBlockQuotation describes an outgoing block quotation.
+type InputRichBlockBlockQuotation struct {
+	Type   string           `json:"type"`
+	Blocks []InputRichBlock `json:"blocks"`
+	Credit RichText         `json:"credit,omitempty"`
+}
+
+// InputRichBlockPullQuotation describes an outgoing pull quotation.
+type InputRichBlockPullQuotation struct {
+	Type   string   `json:"type"`
+	Text   RichText `json:"text"`
+	Credit RichText `json:"credit,omitempty"`
+}
+
+// InputRichBlockCollage describes an outgoing collage block.
+type InputRichBlockCollage struct {
+	Type    string            `json:"type"`
+	Blocks  []InputRichBlock  `json:"blocks"`
+	Caption *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// InputRichBlockSlideshow describes an outgoing slideshow block.
+type InputRichBlockSlideshow struct {
+	Type    string            `json:"type"`
+	Blocks  []InputRichBlock  `json:"blocks"`
+	Caption *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// InputRichBlockTable describes an outgoing table block.
+type InputRichBlockTable struct {
+	Type       string                 `json:"type"`
+	Cells      [][]RichBlockTableCell `json:"cells"`
+	IsBordered bool                   `json:"is_bordered,omitempty"`
+	IsStriped  bool                   `json:"is_striped,omitempty"`
+	Caption    RichText               `json:"caption,omitempty"`
+}
+
+// InputRichBlockDetails describes an outgoing details block.
+type InputRichBlockDetails struct {
+	Type    string           `json:"type"`
+	Summary RichText         `json:"summary"`
+	Blocks  []InputRichBlock `json:"blocks"`
+	IsOpen  bool             `json:"is_open,omitempty"`
+}
+
+// InputRichBlockMap describes an outgoing map block.
+type InputRichBlockMap struct {
+	Type     string            `json:"type"`
+	Location Location          `json:"location"`
+	Zoom     int               `json:"zoom"`
+	Width    int               `json:"width"`
+	Height   int               `json:"height"`
+	Caption  *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// InputRichBlockAnimation describes an outgoing animation block.
+type InputRichBlockAnimation struct {
+	Type      string              `json:"type"`
+	Animation InputMediaAnimation `json:"animation"`
+	Caption   *RichBlockCaption   `json:"caption,omitempty"`
+}
+
+// InputRichBlockAudio describes an outgoing audio block.
+type InputRichBlockAudio struct {
+	Type    string            `json:"type"`
+	Audio   InputMediaAudio   `json:"audio"`
+	Caption *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// InputRichBlockPhoto describes an outgoing photo block.
+type InputRichBlockPhoto struct {
+	Type    string            `json:"type"`
+	Photo   InputMediaPhoto   `json:"photo"`
+	Caption *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// InputRichBlockVideo describes an outgoing video block.
+type InputRichBlockVideo struct {
+	Type    string            `json:"type"`
+	Video   InputMediaVideo   `json:"video"`
+	Caption *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// InputRichBlockVoiceNote describes an outgoing voice note block.
+type InputRichBlockVoiceNote struct {
+	Type      string              `json:"type"`
+	VoiceNote InputMediaVoiceNote `json:"voice_note"`
+	Caption   *RichBlockCaption   `json:"caption,omitempty"`
+}
+
+// InputRichBlockThinking describes an outgoing thinking placeholder block.
+type InputRichBlockThinking struct {
+	Type string   `json:"type"`
+	Text RichText `json:"text"`
 }
 
 // UserProfilePhotos contains a set of user profile photos.
@@ -3427,6 +4003,10 @@ type ChatJoinRequest struct {
 	//
 	// optional
 	InviteLink *ChatInviteLink `json:"invite_link,omitempty"`
+	// QueryID is the identifier of the join request query.
+	//
+	// optional
+	QueryID string `json:"query_id,omitempty"`
 }
 
 // ChatPermissions describes actions that a non-administrator user is
@@ -3753,6 +4333,10 @@ type BotCommand struct {
 	Command string `json:"command"`
 	// Description of the command, 3-256 characters.
 	Description string `json:"description"`
+	// IsEphemeral is true if the command sends an ephemeral message.
+	//
+	// optional
+	IsEphemeral bool `json:"is_ephemeral,omitempty"`
 }
 
 // BotCommandScope represents the scope to which bot commands are applied.
@@ -4226,6 +4810,15 @@ type InputMediaDocument struct {
 	DisableContentTypeDetection bool `json:"disable_content_type_detection,omitempty"`
 }
 
+// InputMediaVoiceNote represents a voice message file to send.
+type InputMediaVoiceNote struct {
+	BaseInputMedia
+	// Duration of the voice message in seconds.
+	//
+	// optional
+	Duration int `json:"duration,omitempty"`
+}
+
 // InputMediaLivePhoto represents a live photo to send.
 type InputMediaLivePhoto struct {
 	BaseInputMedia
@@ -4302,6 +4895,28 @@ func (media *InputMediaVenue) getThumb() RequestFileData {
 func (media *InputMediaVenue) setUploadMedia(_ string) {}
 
 func (media *InputMediaVenue) setUploadThumb(_ string) {}
+
+// InputMediaLink represents an HTTP link to send as poll option media.
+type InputMediaLink struct {
+	Type string `json:"type"`
+	URL  string `json:"url"`
+}
+
+func (media *InputMediaLink) getType() string {
+	return media.Type
+}
+
+func (media *InputMediaLink) getMedia() RequestFileData {
+	return nil
+}
+
+func (media *InputMediaLink) getThumb() RequestFileData {
+	return nil
+}
+
+func (media *InputMediaLink) setUploadMedia(_ string) {}
+
+func (media *InputMediaLink) setUploadThumb(_ string) {}
 
 // InputMediaSticker represents a sticker file to send.
 type InputMediaSticker struct {
@@ -4608,6 +5223,32 @@ type InputSticker struct {
 	//
 	// optional
 	Keywords []string `json:"keywords"`
+}
+
+func (sticker InputSticker) MarshalJSON() ([]byte, error) {
+	out := map[string]any{
+		"format":     sticker.Format,
+		"emoji_list": sticker.EmojiList,
+	}
+	if sticker.Sticker.Data != nil {
+		if sticker.Sticker.Data.NeedsUpload() {
+			name := sticker.Sticker.Name
+			if name == "" {
+				name = "sticker"
+			}
+			out["sticker"] = "attach://" + name
+		} else {
+			out["sticker"] = sticker.Sticker.Data.SendData()
+		}
+	}
+	if sticker.MaskPosition != nil {
+		out["mask_position"] = sticker.MaskPosition
+	}
+	if sticker.Keywords != nil {
+		out["keywords"] = sticker.Keywords
+	}
+
+	return json.Marshal(out)
 }
 
 // Game represents a game. Use BotFather to create and edit games, their short
@@ -6301,6 +6942,11 @@ type InputFile = RequestFileData
 // InputMessageContent represents content of a message to be sent as input.
 type InputMessageContent any
 
+// InputRichMessageContent represents rich message content to be sent as an inline query result.
+type InputRichMessageContent struct {
+	RichMessage InputRichMessage `json:"rich_message"`
+}
+
 // InlineQueryResult represents any inline query result object.
 type InlineQueryResult any
 
@@ -6417,6 +7063,27 @@ type ManagedBotUpdated struct {
 	User User `json:"user"`
 	Bot  User `json:"bot"`
 }
+
+// BotSubscriptionUpdated contains information about a user payment subscription change.
+type BotSubscriptionUpdated struct {
+	User           User   `json:"user"`
+	InvoicePayload string `json:"invoice_payload"`
+	State          string `json:"state"`
+}
+
+// Community represents a group of related chats.
+type Community struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+// CommunityChatAdded describes a chat being added to a community.
+type CommunityChatAdded struct {
+	Community Community `json:"community"`
+}
+
+// CommunityChatRemoved describes a chat being removed from a community.
+type CommunityChatRemoved struct{}
 
 // PollOptionAdded describes a service message about an option added to a poll.
 type PollOptionAdded struct {

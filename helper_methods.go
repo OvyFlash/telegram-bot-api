@@ -28,6 +28,57 @@ func NewMessage(chatID int64, text string) MessageConfig {
 	}
 }
 
+// NewInputRichMessageHTML creates a new HTML rich message input.
+func NewInputRichMessageHTML(html string) InputRichMessage {
+	return InputRichMessage{
+		HTML: html,
+	}
+}
+
+// NewInputRichMessageMarkdown creates a new Markdown rich message input.
+func NewInputRichMessageMarkdown(markdown string) InputRichMessage {
+	return InputRichMessage{
+		Markdown: markdown,
+	}
+}
+
+// NewInputRichMessageBlocks creates a rich message input from block entities.
+func NewInputRichMessageBlocks(blocks ...InputRichBlock) InputRichMessage {
+	return InputRichMessage{
+		Blocks: blocks,
+	}
+}
+
+// NewInputRichMessageContent creates new rich message content for inline query results.
+func NewInputRichMessageContent(richMessage InputRichMessage) InputRichMessageContent {
+	return InputRichMessageContent{
+		RichMessage: richMessage,
+	}
+}
+
+// NewSendRichMessage creates a new rich message.
+func NewSendRichMessage(chatID int64, richMessage InputRichMessage) SendRichMessageConfig {
+	return SendRichMessageConfig{
+		BaseChat: BaseChat{
+			ChatConfig: ChatConfig{
+				ChatID: chatID,
+			},
+		},
+		RichMessage: richMessage,
+	}
+}
+
+// NewSendRichMessageDraft creates a new rich message draft.
+func NewSendRichMessageDraft(chatID int64, draftID int, richMessage InputRichMessage) SendRichMessageDraftConfig {
+	return SendRichMessageDraftConfig{
+		ChatConfig: ChatConfig{
+			ChatID: chatID,
+		},
+		DraftID:     draftID,
+		RichMessage: richMessage,
+	}
+}
+
 // NewDeleteMessage creates a request to delete a message.
 func NewDeleteMessage(chatID int64, messageID int) DeleteMessageConfig {
 	return DeleteMessageConfig{
@@ -330,6 +381,16 @@ func NewInputMediaDocument(media RequestFileData) InputMediaDocument {
 	}
 }
 
+// NewInputMediaVoiceNote creates a new InputMediaVoiceNote.
+func NewInputMediaVoiceNote(media RequestFileData) InputMediaVoiceNote {
+	return InputMediaVoiceNote{
+		BaseInputMedia: BaseInputMedia{
+			Type:  "voice_note",
+			Media: media,
+		},
+	}
+}
+
 // NewInputMediaLivePhoto creates a new InputMediaLivePhoto.
 func NewInputMediaLivePhoto(livePhoto, photo RequestFileData) InputMediaLivePhoto {
 	return InputMediaLivePhoto{
@@ -358,6 +419,14 @@ func NewInputMediaVenue(title, address string, latitude, longitude float64) Inpu
 		Longitude: longitude,
 		Title:     title,
 		Address:   address,
+	}
+}
+
+// NewInputMediaLink creates a new InputMediaLink.
+func NewInputMediaLink(url string) *InputMediaLink {
+	return &InputMediaLink{
+		Type: "link",
+		URL:  url,
 	}
 }
 
@@ -724,6 +793,22 @@ func NewAnswerGuestQuery(guestQueryID string, result InlineQueryResult) AnswerGu
 	}
 }
 
+// NewAnswerChatJoinRequestQuery creates a chat join request query answer.
+func NewAnswerChatJoinRequestQuery(chatJoinRequestQueryID, result string) AnswerChatJoinRequestQueryConfig {
+	return AnswerChatJoinRequestQueryConfig{
+		ChatJoinRequestQueryID: chatJoinRequestQueryID,
+		Result:                 result,
+	}
+}
+
+// NewSendChatJoinRequestWebApp creates a chat join request Mini App response.
+func NewSendChatJoinRequestWebApp(chatJoinRequestQueryID, webAppURL string) SendChatJoinRequestWebAppConfig {
+	return SendChatJoinRequestWebAppConfig{
+		ChatJoinRequestQueryID: chatJoinRequestQueryID,
+		WebAppURL:              webAppURL,
+	}
+}
+
 // NewEditMessageMedia allows you to edit the media content of a message.
 func NewEditMessageMedia(chatID int64, messageID int, inputMedia InputMedia) EditMessageMediaConfig {
 	return EditMessageMediaConfig{
@@ -855,6 +940,66 @@ func NewEditMessageReplyMarkup(chatID int64, messageID int, replyMarkup InlineKe
 			},
 			ReplyMarkup: &replyMarkup,
 		},
+	}
+}
+
+func newBaseEphemeralMessage(chatID, receiverUserID int64, ephemeralMessageID int) BaseEphemeralMessage {
+	return BaseEphemeralMessage{
+		ChatConfig: ChatConfig{
+			ChatID: chatID,
+		},
+		ReceiverUserID:     receiverUserID,
+		EphemeralMessageID: ephemeralMessageID,
+	}
+}
+
+// NewEphemeralMessage creates a text message visible only to receiverUserID.
+//
+// Bot administrators can send the returned config directly. Other bots must
+// additionally set CallbackQueryID or ReplyParameters.EphemeralMessageID
+// within 15 seconds of an eligible action.
+func NewEphemeralMessage(chatID, receiverUserID int64, text string) MessageConfig {
+	config := NewMessage(chatID, text)
+	config.ReceiverUserID = receiverUserID
+	return config
+}
+
+// NewEditEphemeralMessageText creates a request to edit ephemeral message text.
+func NewEditEphemeralMessageText(chatID, receiverUserID int64, ephemeralMessageID int, text string) EditEphemeralMessageTextConfig {
+	return EditEphemeralMessageTextConfig{
+		BaseEphemeralMessage: newBaseEphemeralMessage(chatID, receiverUserID, ephemeralMessageID),
+		Text:                 text,
+	}
+}
+
+// NewEditEphemeralMessageMedia creates a request to edit ephemeral message media.
+func NewEditEphemeralMessageMedia(chatID, receiverUserID int64, ephemeralMessageID int, media InputMedia) EditEphemeralMessageMediaConfig {
+	return EditEphemeralMessageMediaConfig{
+		BaseEphemeralMessage: newBaseEphemeralMessage(chatID, receiverUserID, ephemeralMessageID),
+		Media:                media,
+	}
+}
+
+// NewEditEphemeralMessageCaption creates a request to edit an ephemeral message caption.
+func NewEditEphemeralMessageCaption(chatID, receiverUserID int64, ephemeralMessageID int, caption string) EditEphemeralMessageCaptionConfig {
+	return EditEphemeralMessageCaptionConfig{
+		BaseEphemeralMessage: newBaseEphemeralMessage(chatID, receiverUserID, ephemeralMessageID),
+		Caption:              caption,
+	}
+}
+
+// NewEditEphemeralMessageReplyMarkup creates a request to edit ephemeral message reply markup.
+func NewEditEphemeralMessageReplyMarkup(chatID, receiverUserID int64, ephemeralMessageID int, replyMarkup InlineKeyboardMarkup) EditEphemeralMessageReplyMarkupConfig {
+	return EditEphemeralMessageReplyMarkupConfig{
+		BaseEphemeralMessage: newBaseEphemeralMessage(chatID, receiverUserID, ephemeralMessageID),
+		ReplyMarkup:          &replyMarkup,
+	}
+}
+
+// NewDeleteEphemeralMessage creates a request to delete an ephemeral message.
+func NewDeleteEphemeralMessage(chatID, receiverUserID int64, ephemeralMessageID int) DeleteEphemeralMessageConfig {
+	return DeleteEphemeralMessageConfig{
+		BaseEphemeralMessage: newBaseEphemeralMessage(chatID, receiverUserID, ephemeralMessageID),
 	}
 }
 
@@ -1523,6 +1668,17 @@ func NewPaidMedia(chatID, starCount int64, media *InputPaidMedia) PaidMediaConfi
 		},
 		StarCount: starCount,
 		Media:     media,
+	}
+}
+
+// NewPaidMediaGroup creates a new PaidMediaConfig with one or more paid media items.
+func NewPaidMediaGroup(chatID, starCount int64, media ...InputPaidMedia) PaidMediaConfig {
+	return PaidMediaConfig{
+		BaseChat: BaseChat{
+			ChatConfig: ChatConfig{ChatID: chatID},
+		},
+		StarCount:  starCount,
+		MediaItems: media,
 	}
 }
 

@@ -38,6 +38,11 @@ func (p Params) AddBool(key string, value bool) {
 	}
 }
 
+// AddBoolValue adds a boolean value even when it is false.
+func (p Params) AddBoolValue(key string, value bool) {
+	p[key] = strconv.FormatBool(value)
+}
+
 // AddBoolPtr adds a value of a bool pointer if it is not nil.
 func (p Params) AddBoolPtr(key string, value *bool) {
 	if value != nil {
@@ -54,7 +59,7 @@ func (p Params) AddNonZeroFloat(key string, value float64) {
 
 // AddInterface adds an interface if it is not nil and can be JSON marshalled.
 func (p Params) AddInterface(key string, value any) error {
-	if value == nil || (reflect.ValueOf(value).Kind() == reflect.Pointer && reflect.ValueOf(value).IsNil()) {
+	if isNilParamValue(value) {
 		return nil
 	}
 
@@ -66,6 +71,32 @@ func (p Params) AddInterface(key string, value any) error {
 	p[key] = string(b)
 
 	return nil
+}
+
+// AddInterfaceNonZero adds an interface if it is not nil, not zero, and can be JSON marshalled.
+func (p Params) AddInterfaceNonZero(key string, value any) error {
+	if isNilParamValue(value) {
+		return nil
+	}
+	if reflect.ValueOf(value).IsZero() {
+		return nil
+	}
+
+	return p.AddInterface(key, value)
+}
+
+func isNilParamValue(value any) bool {
+	if value == nil {
+		return true
+	}
+
+	v := reflect.ValueOf(value)
+	switch v.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+		return v.IsNil()
+	default:
+		return false
+	}
 }
 
 // AddFirstValid attempts to add the first item that is not a default value.

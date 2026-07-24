@@ -100,6 +100,25 @@ func TestAddInterface(t *testing.T) {
 	assertEq(t, params["test"], "")
 }
 
+func TestAddInterfaceSkipsNilSlicesAndKeepsEmptySlices(t *testing.T) {
+	params := make(Params)
+
+	var nilEntities []MessageEntity
+	err := params.AddInterface("entities", nilEntities)
+	if err != nil {
+		t.Fatalf("AddInterface returned error: %v", err)
+	}
+	assertLen(t, params, 0)
+
+	emptyEntities := []MessageEntity{}
+	err = params.AddInterface("entities", emptyEntities)
+	if err != nil {
+		t.Fatalf("AddInterface returned error: %v", err)
+	}
+	assertLen(t, params, 1)
+	assertEq(t, params["entities"], "[]")
+}
+
 func TestAddFirstValid(t *testing.T) {
 	params := make(Params)
 	params.AddFirstValid("value", 0, "", "test")

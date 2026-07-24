@@ -2,6 +2,7 @@ package tgbotapi
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 )
@@ -64,6 +65,116 @@ func TestMessageUnmarshalDateAfter2038(t *testing.T) {
 
 	if message.Date != 2208988800 {
 		t.Fatalf("incorrect date: %d", message.Date)
+	}
+}
+
+func TestBotAPI101FieldsUnmarshal(t *testing.T) {
+	const userBody = `{"id":1,"is_bot":true,"first_name":"Bot","supports_join_request_queries":true}`
+
+	var user User
+	if err := json.Unmarshal([]byte(userBody), &user); err != nil {
+		t.Fatal(err)
+	}
+	if !user.SupportsJoinRequestQueries {
+		t.Fatalf("expected supports_join_request_queries: %#v", user)
+	}
+
+	const chatJoinRequestBody = `{
+		"chat":{"id":-1,"type":"supergroup","title":"Chat"},
+		"from":{"id":2,"is_bot":false,"first_name":"Alice"},
+		"user_chat_id":2,
+		"date":123,
+		"query_id":"join-query"
+	}`
+
+	var chatJoinRequest ChatJoinRequest
+	if err := json.Unmarshal([]byte(chatJoinRequestBody), &chatJoinRequest); err != nil {
+		t.Fatal(err)
+	}
+	if chatJoinRequest.QueryID != "join-query" {
+		t.Fatalf("unexpected query_id: %#v", chatJoinRequest)
+	}
+
+	const pollMediaBody = `{"link":{"url":"https://core.telegram.org/bots/api"}}`
+
+	var pollMedia PollMedia
+	if err := json.Unmarshal([]byte(pollMediaBody), &pollMedia); err != nil {
+		t.Fatal(err)
+	}
+	if pollMedia.Link == nil || pollMedia.Link.URL != "https://core.telegram.org/bots/api" {
+		t.Fatalf("unexpected poll media link: %#v", pollMedia)
+	}
+
+	const chatFullInfoBody = `{"id":-1,"type":"supergroup","title":"Chat","guard_bot":{"id":3,"is_bot":true,"first_name":"Guard"}}`
+
+	var chatFullInfo ChatFullInfo
+	if err := json.Unmarshal([]byte(chatFullInfoBody), &chatFullInfo); err != nil {
+		t.Fatal(err)
+	}
+	if chatFullInfo.GuardBot == nil || chatFullInfo.GuardBot.FirstName != "Guard" {
+		t.Fatalf("unexpected guard_bot: %#v", chatFullInfo)
+	}
+}
+
+func TestRichMessageJSON(t *testing.T) {
+	richMessage := RichMessage{
+		Blocks: []RichBlock{
+			RichBlockParagraph{
+				Type: "paragraph",
+				Text: "Hello",
+			},
+			RichBlockSectionHeading{
+				Type: "heading",
+				Text: []RichText{
+					RichTextBold{
+						Type: "bold",
+						Text: "News",
+					},
+				},
+				Size: 2,
+			},
+		},
+		IsRTL: true,
+	}
+
+	data, err := json.Marshal(richMessage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	payload := string(data)
+
+	for _, expected := range []string{
+		`"blocks":[`,
+		`"type":"paragraph"`,
+		`"text":"Hello"`,
+		`"type":"heading"`,
+		`"size":2`,
+		`"is_rtl":true`,
+	} {
+		if !strings.Contains(payload, expected) {
+			t.Fatalf("expected %q in %s", expected, payload)
+		}
+	}
+}
+
+func TestMessageUnmarshalRichMessage(t *testing.T) {
+	const body = `{
+		"message_id":1,
+		"date":123,
+		"chat":{"id":1,"type":"private"},
+		"rich_message":{
+			"blocks":[{"type":"paragraph","text":"Hello"}],
+			"is_rtl":true
+		}
+	}`
+
+	var message Message
+	if err := json.Unmarshal([]byte(body), &message); err != nil {
+		t.Fatal(err)
+	}
+
+	if message.RichMessage == nil || len(message.RichMessage.Blocks) != 1 || !message.RichMessage.IsRTL {
+		t.Fatalf("unexpected rich_message: %#v", message.RichMessage)
 	}
 }
 

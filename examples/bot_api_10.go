@@ -84,3 +84,75 @@ func remove_message_reactions() {
 		log.Println(err)
 	}
 }
+
+func send_structured_rich_message(bot *api.BotAPI, chatID int64) {
+	photo := api.NewInputMediaPhoto(api.FilePath("diagram.jpg"))
+	richMessage := api.NewInputRichMessageBlocks(
+		api.InputRichBlockSectionHeading{
+			Type: "heading",
+			Text: "Release summary",
+			Size: 2,
+		},
+		api.InputRichBlockParagraph{
+			Type: "paragraph",
+			Text: "The migration completed successfully.",
+		},
+		api.InputRichBlockPhoto{
+			Type:  "photo",
+			Photo: photo,
+		},
+	)
+
+	if _, err := bot.SendRichMessage(api.NewSendRichMessage(chatID, richMessage)); err != nil {
+		log.Println(err)
+	}
+}
+
+func configure_ephemeral_command(bot *api.BotAPI) {
+	command := api.BotCommand{
+		Command:     "private_status",
+		Description: "Show status privately",
+		IsEphemeral: true,
+	}
+	if _, err := bot.Request(api.NewSetMyCommands(command)); err != nil {
+		log.Println(err)
+	}
+}
+
+func handle_bot_api_10_2_update(bot *api.BotAPI, update api.Update) {
+	if update.Subscription != nil {
+		log.Printf("subscription %s for user %d", update.Subscription.State, update.Subscription.User.ID)
+	}
+	if update.Message == nil {
+		return
+	}
+	if update.Message.CommunityChatAdded != nil {
+		community := update.Message.CommunityChatAdded.Community
+		log.Printf("joined community %s (%d)", community.Name, community.ID)
+	}
+	if update.Message.CommunityChatRemoved != nil {
+		log.Print("removed from community")
+	}
+	if update.Message.EphemeralMessageID == 0 || update.Message.From == nil {
+		return
+	}
+
+	reply := api.NewMessage(update.Message.Chat.ID, "Checking...")
+	reply.ReceiverUserID = update.Message.From.ID
+	reply.ReplyParameters.EphemeralMessageID = update.Message.EphemeralMessageID
+	sent, err := bot.Send(reply)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	edit := api.NewEditEphemeralMessageText(
+		update.Message.Chat.ID,
+		update.Message.From.ID,
+		sent.EphemeralMessageID,
+		"Ready",
+	)
+	if _, err := bot.EditEphemeralMessageText(edit); err != nil {
+		log.Println(err)
+	}
+}

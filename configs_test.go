@@ -1,6 +1,7 @@
 package tgbotapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -23,6 +24,110 @@ func TestAnswerGuestQueryConfigParams(t *testing.T) {
 	}
 }
 
+func TestAnswerChatJoinRequestQueryConfigParams(t *testing.T) {
+	config := NewAnswerChatJoinRequestQuery("join-query", "approve")
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	if params["chat_join_request_query_id"] != "join-query" {
+		t.Fatalf("chat_join_request_query_id mismatch: %#v", params)
+	}
+	if params["result"] != "approve" {
+		t.Fatalf("result mismatch: %#v", params)
+	}
+}
+
+func TestSendChatJoinRequestWebAppConfigParams(t *testing.T) {
+	config := NewSendChatJoinRequestWebApp("join-query", "https://example.com/app")
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	if params["chat_join_request_query_id"] != "join-query" {
+		t.Fatalf("chat_join_request_query_id mismatch: %#v", params)
+	}
+	if params["web_app_url"] != "https://example.com/app" {
+		t.Fatalf("web_app_url mismatch: %#v", params)
+	}
+}
+
+func TestSendRichMessageConfigParams(t *testing.T) {
+	config := NewSendRichMessage(123, NewInputRichMessageHTML("<p>Hello</p>"))
+	config.MessageThreadID = 456
+	config.DirectMessagesTopicID = 789
+	config.AllowPaidBroadcast = true
+	config.SuggestedPostParameters = &SuggestedPostParameters{Price: &SuggestedPostPrice{Currency: "XTR", Amount: 1}}
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	if params["chat_id"] != "123" {
+		t.Fatalf("chat_id mismatch: %#v", params)
+	}
+	if params["message_thread_id"] != "456" || params["direct_messages_topic_id"] != "789" {
+		t.Fatalf("thread params mismatch: %#v", params)
+	}
+	if params["allow_paid_broadcast"] != "true" {
+		t.Fatalf("allow_paid_broadcast mismatch: %#v", params)
+	}
+	if !strings.Contains(params["rich_message"], `"html":"\u003cp\u003eHello\u003c/p\u003e"`) {
+		t.Fatalf("rich_message mismatch: %#v", params)
+	}
+	if !strings.Contains(params["suggested_post_parameters"], `"price":{"currency":"XTR","amount":1}`) {
+		t.Fatalf("suggested_post_parameters mismatch: %#v", params)
+	}
+}
+
+func TestSendRichMessageDraftConfigParams(t *testing.T) {
+	config := NewSendRichMessageDraft(123, 456, NewInputRichMessageMarkdown("**Hello**"))
+	config.MessageThreadID = 789
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	if params["chat_id"] != "123" {
+		t.Fatalf("chat_id mismatch: %#v", params)
+	}
+	if params["draft_id"] != "456" || params["message_thread_id"] != "789" {
+		t.Fatalf("draft params mismatch: %#v", params)
+	}
+	if !strings.Contains(params["rich_message"], `"markdown":"**Hello**"`) {
+		t.Fatalf("rich_message mismatch: %#v", params)
+	}
+}
+
+func TestInputMediaLinkSerialization(t *testing.T) {
+	option := NewPollOptionWithMedia("docs", NewInputMediaLink("https://core.telegram.org/bots/api"))
+	config := SendPollConfig{
+		BaseChat: BaseChat{
+			ChatConfig: ChatConfig{ChatID: 1},
+		},
+		Question: "q",
+		Options:  []InputPollOption{option},
+	}
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	if !strings.Contains(params["options"], `"media":{"type":"link","url":"https://core.telegram.org/bots/api"}`) {
+		t.Fatalf("options media mismatch: %#v", params["options"])
+	}
+	if files := config.files(); len(files) != 0 {
+		t.Fatalf("unexpected files for link media: %+v", files)
+	}
+}
+
 func TestSendLivePhotoConfigUploadSerialization(t *testing.T) {
 	config := NewLivePhoto(1, FilePath("tests/video.mp4"), FilePath("tests/image.jpg"))
 	config.Caption = "live"
@@ -39,6 +144,50 @@ func TestSendLivePhotoConfigUploadSerialization(t *testing.T) {
 	files := config.files()
 	if len(files) != 2 || files[0].Name != "live_photo" || files[1].Name != "photo" {
 		t.Fatalf("unexpected files payload: %+v", files)
+	}
+}
+
+func TestVideoAndAnimationConfigDimensionParams(t *testing.T) {
+	tests := []struct {
+		name           string
+		params         func() (Params, error)
+		expectedWidth  string
+		expectedHeight string
+	}{
+		{
+			name: "video",
+			params: func() (Params, error) {
+				config := NewVideo(1, FileID("video-file-id"))
+				config.Width = 1920
+				config.Height = 1080
+				return config.params()
+			},
+			expectedWidth:  "1920",
+			expectedHeight: "1080",
+		},
+		{
+			name: "animation",
+			params: func() (Params, error) {
+				config := NewAnimation(1, FileID("animation-file-id"))
+				config.Width = 640
+				config.Height = 360
+				return config.params()
+			},
+			expectedWidth:  "640",
+			expectedHeight: "360",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			params, err := tt.params()
+			if err != nil {
+				t.Fatalf("params failed: %v", err)
+			}
+			if params["width"] != tt.expectedWidth || params["height"] != tt.expectedHeight {
+				t.Fatalf("dimension params mismatch: %#v", params)
+			}
+		})
 	}
 }
 
@@ -118,6 +267,66 @@ func TestPaidMediaLivePhotoSerialization(t *testing.T) {
 	files := config.files()
 	if len(files) != 2 || files[0].Name != "file-0" || files[1].Name != "file-0-photo" {
 		t.Fatalf("unexpected files payload: %+v", files)
+	}
+}
+
+func TestPaidMediaConfigSerializesMediaArray(t *testing.T) {
+	photo := NewInputMediaPhoto(FileID("paid-photo-id"))
+	paid := NewInputPaidMediaPhoto(&photo)
+	config := NewPaidMedia(1, 10, &paid)
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	var media []map[string]any
+	if err := json.Unmarshal([]byte(params["media"]), &media); err != nil {
+		t.Fatalf("media must be a JSON array, got %q: %v", params["media"], err)
+	}
+	if len(media) != 1 || media[0]["type"] != "photo" || media[0]["media"] != "paid-photo-id" {
+		t.Fatalf("unexpected paid media payload: %#v", media)
+	}
+}
+
+func TestPaidMediaGroupConfigSerializesMultipleMedia(t *testing.T) {
+	photo := NewInputMediaPhoto(FileID("paid-photo-id"))
+	paidPhoto := NewInputPaidMediaPhoto(&photo)
+	video := NewInputMediaVideo(FileID("paid-video-id"))
+	paidVideo := NewInputPaidMediaVideo(&video)
+	config := NewPaidMediaGroup(1, 10, paidPhoto, paidVideo)
+
+	params, err := config.params()
+	if err != nil {
+		t.Fatalf("params failed: %v", err)
+	}
+
+	var media []map[string]any
+	if err := json.Unmarshal([]byte(params["media"]), &media); err != nil {
+		t.Fatalf("media must be a JSON array, got %q: %v", params["media"], err)
+	}
+	if len(media) != 2 || media[0]["type"] != "photo" || media[1]["type"] != "video" {
+		t.Fatalf("unexpected paid media payload: %#v", media)
+	}
+}
+
+func TestPaidMediaVideoMetadataSurvivesUploadPreparation(t *testing.T) {
+	video := NewInputMediaVideo(FilePath("tests/video.mp4"))
+	paid := NewInputPaidMediaVideo(&video)
+	paid.Cover = "cover-file-id"
+	paid.StartTimestamp = 12
+
+	prepared := prepareInputMediaForParams([]InputMedia{&paid})
+	if len(prepared) != 1 {
+		t.Fatalf("unexpected prepared media: %+v", prepared)
+	}
+
+	params := Params{}
+	if err := params.AddInterface("media", prepared[0]); err != nil {
+		t.Fatalf("marshal prepared media: %v", err)
+	}
+	if !strings.Contains(params["media"], `"cover":"cover-file-id"`) || !strings.Contains(params["media"], `"start_timestamp":12`) {
+		t.Fatalf("paid media metadata was not preserved: %s", params["media"])
 	}
 }
 
@@ -1293,6 +1502,255 @@ func TestAPIParityRegressionFixes(t *testing.T) {
 
 	if got := (ChatMemberCountConfig{}).method(); got != "getChatMemberCount" {
 		t.Fatalf("expected getChatMemberCount method, got %q", got)
+	}
+
+	editText := EditMessageTextConfig{
+		BaseEdit: BaseEdit{
+			BaseChatMessage: BaseChatMessage{
+				ChatConfig: ChatConfig{ChatID: 1},
+				MessageID:  2,
+			},
+		},
+		RichMessage: NewInputRichMessageMarkdown("**updated**"),
+	}
+	params, err = editText.params()
+	if err != nil {
+		t.Fatalf("editMessageText params error: %v", err)
+	}
+	if !strings.Contains(params["rich_message"], `"markdown":"**updated**"`) {
+		t.Fatalf("expected rich_message param, got %#v", params)
+	}
+	if _, ok := params["text"]; ok {
+		t.Fatalf("unexpected empty text param with rich_message: %#v", params)
+	}
+
+	paidPhotoMedia := NewInputMediaPhoto(FileID("paid-photo-id"))
+	paid := NewInputPaidMediaPhoto(&paidPhotoMedia)
+	paidMedia := NewPaidMedia(1, 10, &paid)
+	paidMedia.Payload = "paid-payload"
+	params, err = paidMedia.params()
+	if err != nil {
+		t.Fatalf("sendPaidMedia params error: %v", err)
+	}
+	if params["payload"] != "paid-payload" {
+		t.Fatalf("expected payload param, got %#v", params)
+	}
+
+	customEmojiThumbnail := NewCustomEmojiStickerSetThumbnal("emoji_set", "custom-emoji-id")
+	params, err = customEmojiThumbnail.params()
+	if err != nil {
+		t.Fatalf("setCustomEmojiStickerSetThumbnail params error: %v", err)
+	}
+	if params["custom_emoji_id"] != "custom-emoji-id" {
+		t.Fatalf("expected custom_emoji_id param, got %#v", params)
+	}
+	if _, ok := params["position"]; ok {
+		t.Fatalf("unexpected position param in custom emoji thumbnail params")
+	}
+
+	maskPosition := SetStickerMaskPositionConfig{
+		Sticker:      "sticker-file-id",
+		MaskPosition: &MaskPosition{Point: "forehead", XShift: 0.1, YShift: 0.2, Scale: 1.3},
+	}
+	params, err = maskPosition.params()
+	if err != nil {
+		t.Fatalf("setStickerMaskPosition params error: %v", err)
+	}
+	if !strings.Contains(params["mask_position"], `"point":"forehead"`) {
+		t.Fatalf("expected mask_position param, got %#v", params)
+	}
+	if _, ok := params["keywords"]; ok {
+		t.Fatalf("unexpected keywords param in sticker mask position params")
+	}
+
+	addSticker := AddStickerConfig{
+		UserID: 1,
+		Name:   "stickers",
+		Sticker: InputSticker{
+			Sticker:   RequestFile{Name: "sticker", Data: FileID("sticker-file-id")},
+			Format:    "static",
+			EmojiList: []string{"\u263a"},
+		},
+	}
+	params, err = addSticker.params()
+	if err != nil {
+		t.Fatalf("addStickerToSet params error: %v", err)
+	}
+	if !strings.Contains(params["sticker"], `"sticker":"sticker-file-id"`) || strings.Contains(params["sticker"], `"Name"`) {
+		t.Fatalf("expected InputSticker.sticker to serialize as a file string, got %#v", params["sticker"])
+	}
+	if files := addSticker.files(); len(files) != 0 {
+		t.Fatalf("expected file_id sticker not to be treated as upload file, got %+v", files)
+	}
+
+	newStickerSet := NewStickerSetConfig{
+		UserID: 1,
+		Name:   "stickers",
+		Title:  "Stickers",
+		Stickers: []InputSticker{
+			{
+				Sticker:   RequestFile{Data: FilePath("tests/sticker.webp")},
+				Format:    "static",
+				EmojiList: []string{"\u263a"},
+			},
+		},
+	}
+	params, err = newStickerSet.params()
+	if err != nil {
+		t.Fatalf("createNewStickerSet params error: %v", err)
+	}
+	if !strings.Contains(params["stickers"], `"sticker":"attach://sticker-0"`) {
+		t.Fatalf("expected uploaded InputSticker to use attach reference, got %#v", params["stickers"])
+	}
+	stickerFiles := newStickerSet.files()
+	if len(stickerFiles) != 1 || stickerFiles[0].Name != "sticker-0" {
+		t.Fatalf("expected sticker upload file field, got %+v", stickerFiles)
+	}
+
+	shipping := ShippingConfig{
+		ShippingQueryID: "shipping-query",
+		OK:              false,
+		ErrorMessage:    "no shipping",
+	}
+	params, err = shipping.params()
+	if err != nil {
+		t.Fatalf("answerShippingQuery params error: %v", err)
+	}
+	if params["ok"] != "false" {
+		t.Fatalf("expected required ok=false param, got %#v", params)
+	}
+
+	preCheckout := PreCheckoutConfig{
+		PreCheckoutQueryID: "pre-checkout-query",
+		OK:                 false,
+		ErrorMessage:       "no payment",
+	}
+	params, err = preCheckout.params()
+	if err != nil {
+		t.Fatalf("answerPreCheckoutQuery params error: %v", err)
+	}
+	if params["ok"] != "false" {
+		t.Fatalf("expected required ok=false param, got %#v", params)
+	}
+
+	starSubscription := EditUserStarSubscriptionConfig{
+		UserID:                  1,
+		TelegramPaymentChargeID: "charge-id",
+		IsCanceled:              false,
+	}
+	params, err = starSubscription.params()
+	if err != nil {
+		t.Fatalf("editUserStarSubscription params error: %v", err)
+	}
+	if params["is_canceled"] != "false" {
+		t.Fatalf("expected required is_canceled=false param, got %#v", params)
+	}
+
+	message := NewMessage(1, "hello")
+	params, err = message.params()
+	if err != nil {
+		t.Fatalf("sendMessage params error: %v", err)
+	}
+	for _, key := range []string{"business_connection_id", "reply_parameters", "link_preview_options", "entities"} {
+		if _, ok := params[key]; ok {
+			t.Fatalf("unexpected empty %s param in sendMessage: %#v", key, params)
+		}
+	}
+
+	message.BusinessConnectionID = "business-connection"
+	message.ReplyParameters = ReplyParameters{MessageID: 123}
+	message.LinkPreviewOptions = LinkPreviewOptions{IsDisabled: true}
+	params, err = message.params()
+	if err != nil {
+		t.Fatalf("sendMessage params error: %v", err)
+	}
+	if params["business_connection_id"] != "business-connection" ||
+		!strings.Contains(params["reply_parameters"], `"message_id":123`) ||
+		!strings.Contains(params["link_preview_options"], `"is_disabled":true`) {
+		t.Fatalf("expected explicit optional params in sendMessage: %#v", params)
+	}
+
+	draft := SendMessageDraftConfig{
+		ChatConfig:          ChatConfig{ChatID: 1},
+		DraftID:             2,
+		ThinkingPlaceholder: true,
+	}
+	params, err = draft.params()
+	if err != nil {
+		t.Fatalf("sendMessageDraft params error: %v", err)
+	}
+	if text, ok := params["text"]; !ok || text != "" {
+		t.Fatalf("expected explicit empty text for thinking placeholder, got %#v", params)
+	}
+
+	removeEmojiStatus := SetUserEmojiStatusConfig{UserID: 1, RemoveStatus: true}
+	params, err = removeEmojiStatus.params()
+	if err != nil {
+		t.Fatalf("setUserEmojiStatus params error: %v", err)
+	}
+	if status, ok := params["emoji_status_custom_emoji_id"]; !ok || status != "" {
+		t.Fatalf("expected explicit empty emoji status, got %#v", params)
+	}
+
+	dropThumbnail := SetCustomEmojiStickerSetThumbnailConfig{Name: "emoji_set", DropThumbnail: true}
+	params, err = dropThumbnail.params()
+	if err != nil {
+		t.Fatalf("setCustomEmojiStickerSetThumbnail params error: %v", err)
+	}
+	if thumbnail, ok := params["custom_emoji_id"]; !ok || thumbnail != "" {
+		t.Fatalf("expected explicit empty custom_emoji_id, got %#v", params)
+	}
+
+	removeForumIcon := EditForumTopicConfig{
+		BaseForum: BaseForum{
+			ChatConfig:      ChatConfig{ChatID: 1},
+			MessageThreadID: 2,
+		},
+		RemoveIcon: true,
+	}
+	params, err = removeForumIcon.params()
+	if err != nil {
+		t.Fatalf("editForumTopic params error: %v", err)
+	}
+	if icon, ok := params["icon_custom_emoji_id"]; !ok || icon != "" {
+		t.Fatalf("expected explicit empty icon_custom_emoji_id, got %#v", params)
+	}
+
+	removeName := SetMyNameConfig{LanguageCode: "en", RemoveName: true}
+	params, err = removeName.params()
+	if err != nil {
+		t.Fatalf("setMyName params error: %v", err)
+	}
+	if name, ok := params["name"]; !ok || name != "" {
+		t.Fatalf("expected explicit empty name, got %#v", params)
+	}
+
+	removeDescription := SetMyDescriptionConfig{LanguageCode: "en", RemoveDescription: true}
+	params, err = removeDescription.params()
+	if err != nil {
+		t.Fatalf("setMyDescription params error: %v", err)
+	}
+	if description, ok := params["description"]; !ok || description != "" {
+		t.Fatalf("expected explicit empty description, got %#v", params)
+	}
+
+	removeShortDescription := SetMyShortDescriptionConfig{LanguageCode: "en", RemoveShortDescription: true}
+	params, err = removeShortDescription.params()
+	if err != nil {
+		t.Fatalf("setMyShortDescription params error: %v", err)
+	}
+	if description, ok := params["short_description"]; !ok || description != "" {
+		t.Fatalf("expected explicit empty short_description, got %#v", params)
+	}
+
+	uploadSticker := UploadStickerConfig{
+		UserID:        42,
+		Sticker:       RequestFile{Name: "custom-name", Data: FileBytes{Name: "sticker.webp", Bytes: []byte("sticker")}},
+		StickerFormat: "static",
+	}
+	files := uploadSticker.files()
+	if len(files) != 1 || files[0].Name != "sticker" {
+		t.Fatalf("expected uploadStickerFile sticker file field, got %+v", files)
 	}
 }
 
