@@ -421,6 +421,19 @@ func (bot *BotAPI) EditMessageMedia(chatID int64, messageID int, media InputMedi
 	return message, err
 }
 
+func (bot *BotAPI) EditMessageMediaAndMarkup(chatID int64, messageID int, media InputMedia, replyMarkup InlineKeyboardMarkup) (Message, error) {
+	req := NewEditMessageMediaAndMarkup(chatID, messageID, media, replyMarkup)
+	resp, err := bot.Request(req)
+	if err != nil {
+		return Message{}, err
+	}
+
+	var message Message
+	err = json.Unmarshal(resp.Result, &message)
+
+	return message, err
+}
+
 func (bot *BotAPI) EditMessagePhoto(chatID int64, messageID int, media InputMediaPhoto) (Message, error) {
 	req := NewEditMessagePhoto(chatID, messageID, media)
 	resp, err := bot.Request(req)
