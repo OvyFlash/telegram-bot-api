@@ -39,7 +39,7 @@ richMessage.Media = []tgbotapi.InputRichMessageMedia{
 _, err := bot.SendRichMessage(tgbotapi.NewSendRichMessage(chatID, richMessage))
 ```
 
-Exactly one of `HTML`, `Markdown`, or `Blocks` must be used. Direct upload of new files is not available for `SendRichMessageDraftConfig` or inline `EditMessageTextConfig`; use a Telegram `file_id` or an HTTP URL there.
+Exactly one of `HTML`, `Markdown`, or `Blocks` must be used. Direct upload of new files is not available for `SendRichMessageDraftConfig`, inline `EditMessageTextConfig`, or `EditEphemeralMessageMediaConfig`; use a Telegram `file_id` or an HTTP URL there.
 
 ## Ephemeral Commands and Messages
 
@@ -58,9 +58,7 @@ An incoming ephemeral command has `Message.MessageID == 0` and a separate `Messa
 ```go
 incoming := update.Message
 reply := tgbotapi.NewMessage(incoming.Chat.ID, "Checking...")
-reply.EphemeralMessageParameters = &tgbotapi.EphemeralMessageParameters{
-	ReceiverUserID: incoming.From.ID,
-}
+reply.ReceiverUserID = incoming.From.ID
 reply.ReplyParameters.EphemeralMessageID = incoming.EphemeralMessageID
 
 sent, err := bot.Send(reply)
@@ -76,9 +74,9 @@ if err != nil {
 }
 ```
 
-For a callback-query-triggered response, set `EphemeralMessageParameters.CallbackQueryID` on the selected send config instead of replying to an ephemeral message. Non-administrator bots must respond within 15 seconds of the eligible action. Telegram does not guarantee delivery, especially when the receiver is offline.
+For a callback-query-triggered response, set `CallbackQueryID` on the selected send config instead of replying to an ephemeral message. Non-administrator bots must respond within 15 seconds of the eligible action. Telegram does not guarantee delivery, especially when the receiver is offline.
 
-The edit and delete methods require all three identifiers: chat, receiver user, and ephemeral message. `EditEphemeralMessageCaption` accepts an empty caption to remove it. `EditEphemeralMessageMedia` supports uploading new files.
+The edit and delete methods require all three identifiers: chat, receiver user, and ephemeral message. `EditEphemeralMessageCaption` accepts an empty caption to remove it. New uploads are not supported by `EditEphemeralMessageMedia`.
 
 ## Subscription and Community Updates
 

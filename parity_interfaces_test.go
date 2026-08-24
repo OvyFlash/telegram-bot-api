@@ -57,8 +57,6 @@ var (
 	_ Fileable = SendLivePhotoConfig{}
 	_ Fileable = SendRichMessageConfig{}
 	_ Fileable = EditMessageTextConfig{}
-	_ Fileable = EditEphemeralMessageTextConfig{}
-	_ Fileable = EditEphemeralMessageMediaConfig{}
 	_ Fileable = SendPollConfig{}
 	_ Fileable = SetBusinessAccountProfilePhotoConfig{}
 	_ Fileable = PostStoryConfig{}

@@ -136,9 +136,6 @@ const (
 
 	// UpdateTypeSubscription is emitted when a user payment subscription changes.
 	UpdateTypeSubscription = "subscription"
-
-	// UpdateTypeStoppedMessageGeneration is emitted when a user stops message generation.
-	UpdateTypeStoppedMessageGeneration = "stopped_message_generation"
 )
 
 // Library errors
@@ -312,11 +309,12 @@ func (CloseConfig) params() (Params, error) {
 // MessageConfig contains information about a SendMessage request.
 type MessageConfig struct {
 	BaseChat
-	Text                       string
-	ParseMode                  string
-	Entities                   []MessageEntity
-	LinkPreviewOptions         LinkPreviewOptions
-	EphemeralMessageParameters *EphemeralMessageParameters
+	Text               string
+	ParseMode          string
+	Entities           []MessageEntity
+	LinkPreviewOptions LinkPreviewOptions
+	ReceiverUserID     int64
+	CallbackQueryID    string
 }
 
 func (config MessageConfig) params() (Params, error) {
@@ -327,9 +325,8 @@ func (config MessageConfig) params() (Params, error) {
 
 	params["text"] = config.Text
 	params.AddNonEmpty("parse_mode", config.ParseMode)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
-		return params, err
-	}
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("entities", config.Entities)
 	if err != nil {
 		return params, err
@@ -373,8 +370,6 @@ type SendMessageDraftConfig struct {
 	ThinkingPlaceholder bool
 	ParseMode           string
 	Entities            []MessageEntity
-	CanStop             bool
-	KeepOnStop          bool
 }
 
 func (config SendMessageDraftConfig) method() string {
@@ -396,11 +391,6 @@ func (config SendMessageDraftConfig) params() (Params, error) {
 	}
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	err = params.AddInterface("entities", config.Entities)
-	if err != nil {
-		return params, err
-	}
-	params.AddBool("can_stop", config.CanStop)
-	params.AddBool("keep_on_stop", config.KeepOnStop)
 
 	return params, err
 }
@@ -408,8 +398,7 @@ func (config SendMessageDraftConfig) params() (Params, error) {
 // SendRichMessageConfig allows you to send a rich message.
 type SendRichMessageConfig struct {
 	BaseChat
-	RichMessage                InputRichMessage
-	EphemeralMessageParameters *EphemeralMessageParameters
+	RichMessage InputRichMessage
 }
 
 func (config SendRichMessageConfig) method() string {
@@ -424,10 +413,6 @@ func (config SendRichMessageConfig) params() (Params, error) {
 
 	preparedRichMessage := prepareInputRichMessageForParams(config.RichMessage)
 	err = params.AddInterface("rich_message", preparedRichMessage)
-	if err != nil {
-		return params, err
-	}
-	err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters)
 
 	return params, err
 }
@@ -442,8 +427,6 @@ type SendRichMessageDraftConfig struct {
 	MessageThreadID int
 	DraftID         int
 	RichMessage     InputRichMessage
-	CanStop         bool
-	KeepOnStop      bool
 }
 
 func (config SendRichMessageDraftConfig) method() string {
@@ -459,11 +442,6 @@ func (config SendRichMessageDraftConfig) params() (Params, error) {
 	params.AddNonZero("message_thread_id", config.MessageThreadID)
 	params.AddNonZero("draft_id", config.DraftID)
 	err = params.AddInterface("rich_message", config.RichMessage)
-	if err != nil {
-		return params, err
-	}
-	params.AddBool("can_stop", config.CanStop)
-	params.AddBool("keep_on_stop", config.KeepOnStop)
 
 	return params, err
 }
@@ -595,12 +573,13 @@ func (config CopyMessagesConfig) method() string {
 type PhotoConfig struct {
 	BaseFile
 	BaseSpoiler
-	Thumb                      RequestFileData
-	Caption                    string
-	ParseMode                  string
-	CaptionEntities            []MessageEntity
-	ShowCaptionAboveMedia      bool
-	EphemeralMessageParameters *EphemeralMessageParameters
+	Thumb                 RequestFileData
+	Caption               string
+	ParseMode             string
+	CaptionEntities       []MessageEntity
+	ShowCaptionAboveMedia bool
+	ReceiverUserID        int64
+	CallbackQueryID       string
 }
 
 func (config PhotoConfig) params() (Params, error) {
@@ -612,9 +591,8 @@ func (config PhotoConfig) params() (Params, error) {
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
-		return params, err
-	}
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
 	if err != nil {
 		return params, err
@@ -644,13 +622,14 @@ func (config PhotoConfig) files() []RequestFile {
 type SendLivePhotoConfig struct {
 	BaseChat
 	BaseSpoiler
-	LivePhoto                  RequestFileData
-	Photo                      RequestFileData
-	Caption                    string
-	ParseMode                  string
-	CaptionEntities            []MessageEntity
-	ShowCaptionAboveMedia      bool
-	EphemeralMessageParameters *EphemeralMessageParameters
+	LivePhoto             RequestFileData
+	Photo                 RequestFileData
+	Caption               string
+	ParseMode             string
+	CaptionEntities       []MessageEntity
+	ShowCaptionAboveMedia bool
+	ReceiverUserID        int64
+	CallbackQueryID       string
 }
 
 func (config SendLivePhotoConfig) params() (Params, error) {
@@ -662,9 +641,8 @@ func (config SendLivePhotoConfig) params() (Params, error) {
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
-		return params, err
-	}
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	if err = params.AddInterface("caption_entities", config.CaptionEntities); err != nil {
 		return params, err
 	}
@@ -692,14 +670,15 @@ func (config SendLivePhotoConfig) files() []RequestFile {
 // AudioConfig contains information about a SendAudio request.
 type AudioConfig struct {
 	BaseFile
-	Thumb                      RequestFileData
-	Caption                    string
-	ParseMode                  string
-	CaptionEntities            []MessageEntity
-	Duration                   int
-	Performer                  string
-	Title                      string
-	EphemeralMessageParameters *EphemeralMessageParameters
+	Thumb           RequestFileData
+	Caption         string
+	ParseMode       string
+	CaptionEntities []MessageEntity
+	Duration        int
+	Performer       string
+	Title           string
+	ReceiverUserID  int64
+	CallbackQueryID string
 }
 
 func (config AudioConfig) params() (Params, error) {
@@ -713,9 +692,8 @@ func (config AudioConfig) params() (Params, error) {
 	params.AddNonEmpty("title", config.Title)
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
-		return params, err
-	}
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
 
 	return params, err
@@ -740,7 +718,8 @@ type DocumentConfig struct {
 	ParseMode                   string
 	CaptionEntities             []MessageEntity
 	DisableContentTypeDetection bool
-	EphemeralMessageParameters  *EphemeralMessageParameters
+	ReceiverUserID              int64
+	CallbackQueryID             string
 }
 
 func (config DocumentConfig) params() (Params, error) {
@@ -752,9 +731,8 @@ func (config DocumentConfig) params() (Params, error) {
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("disable_content_type_detection", config.DisableContentTypeDetection)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
-		return params, err
-	}
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
 	if err != nil {
 		return params, err
@@ -779,7 +757,8 @@ type StickerConfig struct {
 	// Emoji associated with the sticker; only for just uploaded stickers
 	Emoji string
 	BaseFile
-	EphemeralMessageParameters *EphemeralMessageParameters
+	ReceiverUserID  int64
+	CallbackQueryID string
 }
 
 func (config StickerConfig) params() (Params, error) {
@@ -788,9 +767,8 @@ func (config StickerConfig) params() (Params, error) {
 		return params, err
 	}
 	params.AddNonEmpty("emoji", config.Emoji)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
-		return params, err
-	}
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	return params, err
 }
 
@@ -806,18 +784,19 @@ func (config StickerConfig) files() []RequestFile {
 type VideoConfig struct {
 	BaseFile
 	BaseSpoiler
-	Thumb                      RequestFileData
-	Duration                   int
-	Width                      int
-	Height                     int
-	Cover                      RequestFileData
-	StartTimestamp             int64
-	Caption                    string
-	ParseMode                  string
-	CaptionEntities            []MessageEntity
-	ShowCaptionAboveMedia      bool
-	SupportsStreaming          bool
-	EphemeralMessageParameters *EphemeralMessageParameters
+	Thumb                 RequestFileData
+	Duration              int
+	Width                 int
+	Height                int
+	Cover                 RequestFileData
+	StartTimestamp        int64
+	Caption               string
+	ParseMode             string
+	CaptionEntities       []MessageEntity
+	ShowCaptionAboveMedia bool
+	SupportsStreaming     bool
+	ReceiverUserID        int64
+	CallbackQueryID       string
 }
 
 func (config VideoConfig) params() (Params, error) {
@@ -834,9 +813,8 @@ func (config VideoConfig) params() (Params, error) {
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("supports_streaming", config.SupportsStreaming)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
-		return params, err
-	}
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
 	if err != nil {
 		return params, err
@@ -867,15 +845,16 @@ func (config VideoConfig) files() []RequestFile {
 type AnimationConfig struct {
 	BaseFile
 	BaseSpoiler
-	Duration                   int
-	Width                      int
-	Height                     int
-	Thumb                      RequestFileData
-	Caption                    string
-	ParseMode                  string
-	CaptionEntities            []MessageEntity
-	ShowCaptionAboveMedia      bool
-	EphemeralMessageParameters *EphemeralMessageParameters
+	Duration              int
+	Width                 int
+	Height                int
+	Thumb                 RequestFileData
+	Caption               string
+	ParseMode             string
+	CaptionEntities       []MessageEntity
+	ShowCaptionAboveMedia bool
+	ReceiverUserID        int64
+	CallbackQueryID       string
 }
 
 func (config AnimationConfig) params() (Params, error) {
@@ -890,9 +869,8 @@ func (config AnimationConfig) params() (Params, error) {
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
-		return params, err
-	}
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
 	if err != nil {
 		return params, err
@@ -921,10 +899,11 @@ func (config AnimationConfig) files() []RequestFile {
 // VideoNoteConfig contains information about a SendVideoNote request.
 type VideoNoteConfig struct {
 	BaseFile
-	Thumb                      RequestFileData
-	Duration                   int
-	Length                     int
-	EphemeralMessageParameters *EphemeralMessageParameters
+	Thumb           RequestFileData
+	Duration        int
+	Length          int
+	ReceiverUserID  int64
+	CallbackQueryID string
 }
 
 func (config VideoNoteConfig) params() (Params, error) {
@@ -932,9 +911,8 @@ func (config VideoNoteConfig) params() (Params, error) {
 
 	params.AddNonZero("duration", config.Duration)
 	params.AddNonZero("length", config.Length)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
-		return params, err
-	}
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 
 	return params, err
 }
@@ -1015,12 +993,13 @@ func (config PaidMediaConfig) inputPaidMedia() []InputMedia {
 // VoiceConfig contains information about a SendVoice request.
 type VoiceConfig struct {
 	BaseFile
-	Thumb                      RequestFileData
-	Caption                    string
-	ParseMode                  string
-	CaptionEntities            []MessageEntity
-	Duration                   int
-	EphemeralMessageParameters *EphemeralMessageParameters
+	Thumb           RequestFileData
+	Caption         string
+	ParseMode       string
+	CaptionEntities []MessageEntity
+	Duration        int
+	ReceiverUserID  int64
+	CallbackQueryID string
 }
 
 func (config VoiceConfig) params() (Params, error) {
@@ -1032,9 +1011,8 @@ func (config VoiceConfig) params() (Params, error) {
 	params.AddNonZero("duration", config.Duration)
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
-		return params, err
-	}
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
 
 	return params, err
@@ -1054,13 +1032,14 @@ func (config VoiceConfig) files() []RequestFile {
 // LocationConfig contains information about a SendLocation request.
 type LocationConfig struct {
 	BaseChat
-	Latitude                   float64 // required
-	Longitude                  float64 // required
-	HorizontalAccuracy         float64 // optional
-	LivePeriod                 int     // optional
-	Heading                    int     // optional
-	ProximityAlertRadius       int     // optional
-	EphemeralMessageParameters *EphemeralMessageParameters
+	Latitude             float64 // required
+	Longitude            float64 // required
+	HorizontalAccuracy   float64 // optional
+	LivePeriod           int     // optional
+	Heading              int     // optional
+	ProximityAlertRadius int     // optional
+	ReceiverUserID       int64
+	CallbackQueryID      string
 }
 
 func (config LocationConfig) params() (Params, error) {
@@ -1072,9 +1051,8 @@ func (config LocationConfig) params() (Params, error) {
 	params.AddNonZero("live_period", config.LivePeriod)
 	params.AddNonZero("heading", config.Heading)
 	params.AddNonZero("proximity_alert_radius", config.ProximityAlertRadius)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
-		return params, err
-	}
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 
 	return params, err
 }
@@ -1127,15 +1105,16 @@ func (config StopMessageLiveLocationConfig) method() string {
 // VenueConfig contains information about a SendVenue request.
 type VenueConfig struct {
 	BaseChat
-	Latitude                   float64 // required
-	Longitude                  float64 // required
-	Title                      string  // required
-	Address                    string  // required
-	FoursquareID               string
-	FoursquareType             string
-	GooglePlaceID              string
-	GooglePlaceType            string
-	EphemeralMessageParameters *EphemeralMessageParameters
+	Latitude        float64 // required
+	Longitude       float64 // required
+	Title           string  // required
+	Address         string  // required
+	FoursquareID    string
+	FoursquareType  string
+	GooglePlaceID   string
+	GooglePlaceType string
+	ReceiverUserID  int64
+	CallbackQueryID string
 }
 
 func (config VenueConfig) params() (Params, error) {
@@ -1149,9 +1128,8 @@ func (config VenueConfig) params() (Params, error) {
 	params.AddNonEmpty("foursquare_type", config.FoursquareType)
 	params.AddNonEmpty("google_place_id", config.GooglePlaceID)
 	params.AddNonEmpty("google_place_type", config.GooglePlaceType)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
-		return params, err
-	}
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 
 	return params, err
 }
@@ -1163,11 +1141,12 @@ func (config VenueConfig) method() string {
 // ContactConfig allows you to send a contact.
 type ContactConfig struct {
 	BaseChat
-	PhoneNumber                string
-	FirstName                  string
-	LastName                   string
-	VCard                      string
-	EphemeralMessageParameters *EphemeralMessageParameters
+	PhoneNumber     string
+	FirstName       string
+	LastName        string
+	VCard           string
+	ReceiverUserID  int64
+	CallbackQueryID string
 }
 
 func (config ContactConfig) params() (Params, error) {
@@ -1178,9 +1157,8 @@ func (config ContactConfig) params() (Params, error) {
 
 	params.AddNonEmpty("last_name", config.LastName)
 	params.AddNonEmpty("vcard", config.VCard)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
-		return params, err
-	}
+	params.AddNonZero64("receiver_user_id", config.ReceiverUserID)
+	params.AddNonEmpty("callback_query_id", config.CallbackQueryID)
 
 	return params, err
 }
@@ -1520,13 +1498,12 @@ func (config EditMessageReplyMarkupConfig) method() string {
 	return "editMessageReplyMarkup"
 }
 
-// EditEphemeralMessageTextConfig edits an ephemeral text or rich message.
+// EditEphemeralMessageTextConfig edits an ephemeral text message.
 type EditEphemeralMessageTextConfig struct {
 	BaseEphemeralMessage
 	Text               string
 	ParseMode          string
 	Entities           []MessageEntity
-	RichMessage        *InputRichMessage
 	LinkPreviewOptions LinkPreviewOptions
 	ReplyMarkup        *InlineKeyboardMarkup
 }
@@ -1537,16 +1514,10 @@ func (config EditEphemeralMessageTextConfig) params() (Params, error) {
 		return params, err
 	}
 
-	params.AddNonEmpty("text", config.Text)
+	params["text"] = config.Text
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	if err = params.AddInterface("entities", config.Entities); err != nil {
 		return params, err
-	}
-	if config.RichMessage != nil {
-		prepared := prepareInputRichMessageForParams(*config.RichMessage)
-		if err = params.AddInterface("rich_message", prepared); err != nil {
-			return params, err
-		}
 	}
 	if err = params.AddInterfaceNonZero("link_preview_options", config.LinkPreviewOptions); err != nil {
 		return params, err
@@ -1558,13 +1529,6 @@ func (config EditEphemeralMessageTextConfig) params() (Params, error) {
 
 func (EditEphemeralMessageTextConfig) method() string {
 	return "editEphemeralMessageText"
-}
-
-func (config EditEphemeralMessageTextConfig) files() []RequestFile {
-	if config.RichMessage == nil {
-		return nil
-	}
-	return prepareInputRichMessageForFiles(*config.RichMessage)
 }
 
 // EditEphemeralMessageMediaConfig edits the media of an ephemeral message.
@@ -1580,8 +1544,7 @@ func (config EditEphemeralMessageMediaConfig) params() (Params, error) {
 		return params, err
 	}
 
-	preparedMedia := prepareInputMediaForParams([]InputMedia{config.Media})
-	if err = params.AddInterface("media", preparedMedia[0]); err != nil {
+	if err = params.AddInterface("media", config.Media); err != nil {
 		return params, err
 	}
 	err = params.AddInterface("reply_markup", config.ReplyMarkup)
@@ -1593,18 +1556,13 @@ func (EditEphemeralMessageMediaConfig) method() string {
 	return "editEphemeralMessageMedia"
 }
 
-func (config EditEphemeralMessageMediaConfig) files() []RequestFile {
-	return prepareInputMediaForFiles([]InputMedia{config.Media})
-}
-
 // EditEphemeralMessageCaptionConfig edits the caption of an ephemeral message.
 type EditEphemeralMessageCaptionConfig struct {
 	BaseEphemeralMessage
-	Caption               string
-	ParseMode             string
-	CaptionEntities       []MessageEntity
-	ShowCaptionAboveMedia bool
-	ReplyMarkup           *InlineKeyboardMarkup
+	Caption         string
+	ParseMode       string
+	CaptionEntities []MessageEntity
+	ReplyMarkup     *InlineKeyboardMarkup
 }
 
 func (config EditEphemeralMessageCaptionConfig) params() (Params, error) {
@@ -1618,7 +1576,6 @@ func (config EditEphemeralMessageCaptionConfig) params() (Params, error) {
 	if err = params.AddInterface("caption_entities", config.CaptionEntities); err != nil {
 		return params, err
 	}
-	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
 	err = params.AddInterface("reply_markup", config.ReplyMarkup)
 
 	return params, err
@@ -2305,7 +2262,6 @@ type PromoteChatMemberConfig struct {
 	CanManageTopics         bool
 	CanManageDirectMessages bool
 	CanManageTags           bool
-	CanSendWelcomeMessages  bool
 }
 
 func (config PromoteChatMemberConfig) method() string {
@@ -2335,7 +2291,6 @@ func (config PromoteChatMemberConfig) params() (Params, error) {
 	params.AddBool("can_manage_topics", config.CanManageTopics)
 	params.AddBool("can_manage_direct_messages", config.CanManageDirectMessages)
 	params.AddBool("can_manage_tags", config.CanManageTags)
-	params.AddBool("can_send_welcome_messages", config.CanSendWelcomeMessages)
 
 	return params, nil
 }
