@@ -1,0 +1,61 @@
+---
+description: Pipeline to verify Bot API version coverage before/during implementation
+alwaysApply: true
+---
+
+# Bot API Verification Pipeline
+
+Run this before choosing a version bump and again before declaring a version done.
+
+## A. Establish baseline
+
+1. Read https://core.telegram.org/bots/api-changelog from last implemented version → target.
+2. Treat **`master` types/methods** as truth (not git tags). Current implemented ceiling: **10.3**.
+3. Skip Mini App **client-only** APIs (`WebApp.hideKeyboard`, DeviceStorage, etc.) — not HTTP Bot API.
+
+## B. Changelog → checklist
+
+For each version bullet, classify:
+
+| Kind | How to verify in repo |
+|------|------------------------|
+| New class | `type Name` or alias `Name =` in `types.go` |
+| New method | `method()` returns `"camelCaseName"` in a `*Config` |
+| New field | `json:"snake_case` on the owning struct (prefer docs field order) |
+| New parameter | serialized in that config’s `params()` / embedded base |
+| Replacement | old name gone or migrated; new name present |
+| Update payload | field on `Update`/`Message` + `SentFrom`/`FromChat` if needed |
+
+Ignore regex false positives (`allowing`, `and`, `from` from changelog prose).
+
+## C. Commands (local)
+
+```bash
+go vet ./...
+go test -count=1 ./...
+curl -fsSL -o api.json \
+  https://raw.githubusercontent.com/PaulSonOfLars/telegram-bot-api-spec/main/api.json
+go test -tags=api_parity -run '^TestAPIParity' -count=1 .
+```
+
+`api.json` is gitignored. Spec may lag a fresh Telegram release by hours/days — changelog wins if they disagree.
+
+## D. Pattern gates (must pass for new code)
+
+1. Embed bases (`BaseChat`, `BaseEphemeralMessage`, …) — see `telegram-type-patterns`.
+2. Inbound unions flattened (`TransactionPartner`-style), not interface JSON.
+3. Field/param order follows core.telegram.org/bots/api for **new** fields.
+4. Helpers `New*`, `parity_interfaces_test.go` compile checks, tests for params/JSON.
+5. Breaking renames (e.g. 10.3 `ephemeral_message_parameters`): update configs + helpers + tests + examples together.
+
+## E. Decision rule
+
+- If any **prior** version on the checklist has gaps → implement the **oldest** gapped version first.
+- Else implement the **next** changelog version only (one version per branch/PR).
+- After merge, update the Version baseline table in `telegram-bot-api-updates.mdc`.
+
+## F. Post-8.3 audit snapshot
+
+| Version | Curated checklist |
+|---------|-------------------|
+| 9.0–10.3 | Present on `master` (as of Bot API 10.3 landing) |
