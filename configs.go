@@ -316,7 +316,7 @@ type MessageConfig struct {
 	ParseMode                  string
 	Entities                   []MessageEntity
 	LinkPreviewOptions         LinkPreviewOptions
-	EphemeralMessageParameters *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config MessageConfig) params() (Params, error) {
@@ -327,7 +327,7 @@ func (config MessageConfig) params() (Params, error) {
 
 	params["text"] = config.Text
 	params.AddNonEmpty("parse_mode", config.ParseMode)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
+	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
 	err = params.AddInterface("entities", config.Entities)
@@ -409,7 +409,7 @@ func (config SendMessageDraftConfig) params() (Params, error) {
 type SendRichMessageConfig struct {
 	BaseChat
 	RichMessage                InputRichMessage
-	EphemeralMessageParameters *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config SendRichMessageConfig) method() string {
@@ -427,7 +427,7 @@ func (config SendRichMessageConfig) params() (Params, error) {
 	if err != nil {
 		return params, err
 	}
-	err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters)
+	err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters)
 
 	return params, err
 }
@@ -600,7 +600,7 @@ type PhotoConfig struct {
 	ParseMode                  string
 	CaptionEntities            []MessageEntity
 	ShowCaptionAboveMedia      bool
-	EphemeralMessageParameters *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config PhotoConfig) params() (Params, error) {
@@ -612,7 +612,7 @@ func (config PhotoConfig) params() (Params, error) {
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
+	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
@@ -650,7 +650,7 @@ type SendLivePhotoConfig struct {
 	ParseMode                  string
 	CaptionEntities            []MessageEntity
 	ShowCaptionAboveMedia      bool
-	EphemeralMessageParameters *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config SendLivePhotoConfig) params() (Params, error) {
@@ -662,7 +662,7 @@ func (config SendLivePhotoConfig) params() (Params, error) {
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
+	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
 	if err = params.AddInterface("caption_entities", config.CaptionEntities); err != nil {
@@ -699,7 +699,7 @@ type AudioConfig struct {
 	Duration                   int
 	Performer                  string
 	Title                      string
-	EphemeralMessageParameters *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config AudioConfig) params() (Params, error) {
@@ -713,7 +713,7 @@ func (config AudioConfig) params() (Params, error) {
 	params.AddNonEmpty("title", config.Title)
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
+	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
@@ -740,7 +740,7 @@ type DocumentConfig struct {
 	ParseMode                   string
 	CaptionEntities             []MessageEntity
 	DisableContentTypeDetection bool
-	EphemeralMessageParameters  *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config DocumentConfig) params() (Params, error) {
@@ -752,7 +752,7 @@ func (config DocumentConfig) params() (Params, error) {
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("disable_content_type_detection", config.DisableContentTypeDetection)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
+	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
@@ -779,7 +779,7 @@ type StickerConfig struct {
 	// Emoji associated with the sticker; only for just uploaded stickers
 	Emoji string
 	BaseFile
-	EphemeralMessageParameters *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config StickerConfig) params() (Params, error) {
@@ -788,7 +788,7 @@ func (config StickerConfig) params() (Params, error) {
 		return params, err
 	}
 	params.AddNonEmpty("emoji", config.Emoji)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
+	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
 	return params, err
@@ -817,7 +817,7 @@ type VideoConfig struct {
 	CaptionEntities            []MessageEntity
 	ShowCaptionAboveMedia      bool
 	SupportsStreaming          bool
-	EphemeralMessageParameters *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config VideoConfig) params() (Params, error) {
@@ -834,7 +834,7 @@ func (config VideoConfig) params() (Params, error) {
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("supports_streaming", config.SupportsStreaming)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
+	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
@@ -875,7 +875,7 @@ type AnimationConfig struct {
 	ParseMode                  string
 	CaptionEntities            []MessageEntity
 	ShowCaptionAboveMedia      bool
-	EphemeralMessageParameters *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config AnimationConfig) params() (Params, error) {
@@ -890,7 +890,7 @@ func (config AnimationConfig) params() (Params, error) {
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
 	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
+	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
@@ -924,7 +924,7 @@ type VideoNoteConfig struct {
 	Thumb                      RequestFileData
 	Duration                   int
 	Length                     int
-	EphemeralMessageParameters *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config VideoNoteConfig) params() (Params, error) {
@@ -932,7 +932,7 @@ func (config VideoNoteConfig) params() (Params, error) {
 
 	params.AddNonZero("duration", config.Duration)
 	params.AddNonZero("length", config.Length)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
+	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
 
@@ -1020,7 +1020,7 @@ type VoiceConfig struct {
 	ParseMode                  string
 	CaptionEntities            []MessageEntity
 	Duration                   int
-	EphemeralMessageParameters *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config VoiceConfig) params() (Params, error) {
@@ -1032,7 +1032,7 @@ func (config VoiceConfig) params() (Params, error) {
 	params.AddNonZero("duration", config.Duration)
 	params.AddNonEmpty("caption", config.Caption)
 	params.AddNonEmpty("parse_mode", config.ParseMode)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
+	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
 	err = params.AddInterface("caption_entities", config.CaptionEntities)
@@ -1060,7 +1060,7 @@ type LocationConfig struct {
 	LivePeriod                 int     // optional
 	Heading                    int     // optional
 	ProximityAlertRadius       int     // optional
-	EphemeralMessageParameters *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config LocationConfig) params() (Params, error) {
@@ -1072,7 +1072,7 @@ func (config LocationConfig) params() (Params, error) {
 	params.AddNonZero("live_period", config.LivePeriod)
 	params.AddNonZero("heading", config.Heading)
 	params.AddNonZero("proximity_alert_radius", config.ProximityAlertRadius)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
+	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
 
@@ -1135,7 +1135,7 @@ type VenueConfig struct {
 	FoursquareType             string
 	GooglePlaceID              string
 	GooglePlaceType            string
-	EphemeralMessageParameters *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config VenueConfig) params() (Params, error) {
@@ -1149,7 +1149,7 @@ func (config VenueConfig) params() (Params, error) {
 	params.AddNonEmpty("foursquare_type", config.FoursquareType)
 	params.AddNonEmpty("google_place_id", config.GooglePlaceID)
 	params.AddNonEmpty("google_place_type", config.GooglePlaceType)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
+	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
 
@@ -1167,7 +1167,7 @@ type ContactConfig struct {
 	FirstName                  string
 	LastName                   string
 	VCard                      string
-	EphemeralMessageParameters *EphemeralMessageParameters
+	EphemeralMessageParameters EphemeralMessageParameters
 }
 
 func (config ContactConfig) params() (Params, error) {
@@ -1178,7 +1178,7 @@ func (config ContactConfig) params() (Params, error) {
 
 	params.AddNonEmpty("last_name", config.LastName)
 	params.AddNonEmpty("vcard", config.VCard)
-	if err = params.AddInterface("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
+	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
 

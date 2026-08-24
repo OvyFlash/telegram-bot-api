@@ -2796,7 +2796,9 @@ type RichTextBotCommand struct {
 
 // RichTextButton describes a rich text button.
 type RichTextButton struct {
-	Type   string            `json:"type"`
+	// Type type of the rich text, always "button"
+	Type string `json:"type"`
+	// Button the button
 	Button RichMessageButton `json:"button"`
 }
 
@@ -2914,8 +2916,13 @@ type RichBlockBlockQuotation struct {
 
 // RichBlockExpandableBlockQuotation describes an expandable block quotation.
 type RichBlockExpandableBlockQuotation struct {
-	Type   string   `json:"type"`
-	Text   RichText `json:"text"`
+	// Type type of the block, always "expandable_blockquote"
+	Type string `json:"type"`
+	// Text content of the block
+	Text RichText `json:"text"`
+	// Credit credit of the block
+	//
+	// optional
 	Credit RichText `json:"credit,omitempty"`
 }
 
@@ -2945,8 +2952,14 @@ type RichBlockTable struct {
 	Type       string                 `json:"type"`
 	Cells      [][]RichBlockTableCell `json:"cells"`
 	IsBordered bool                   `json:"is_bordered,omitempty"`
-	IsStriped  bool                   `json:"is_striped,omitempty"`
-	IsCompact  bool                   `json:"is_compact,omitempty"`
+	// IsStriped True, if the table is striped
+	//
+	// optional
+	IsStriped bool `json:"is_striped,omitempty"`
+	// IsCompact True, if table cells have smaller indents
+	//
+	// optional
+	IsCompact bool `json:"is_compact,omitempty"`
 	Caption    RichText               `json:"caption,omitempty"`
 }
 
@@ -2968,12 +2981,35 @@ type RichBlockMap struct {
 	Caption  *RichBlockCaption `json:"caption,omitempty"`
 }
 
+// RichBlockButtonsAlignLeft is the left horizontal alignment for RichBlockButtons.
+const RichBlockButtonsAlignLeft = "left"
+
+// RichBlockButtonsAlignCenter is the center horizontal alignment for RichBlockButtons.
+const RichBlockButtonsAlignCenter = "center"
+
+// RichBlockButtonsAlignRight is the right horizontal alignment for RichBlockButtons.
+const RichBlockButtonsAlignRight = "right"
+
 // RichBlockButtons describes a row of rich message buttons.
 type RichBlockButtons struct {
-	Type    string              `json:"type"`
+	// Type type of the block, always "buttons"
+	Type string `json:"type"`
+	// Buttons the buttons
 	Buttons []RichMessageButton `json:"buttons"`
-	Align   string              `json:"align,omitempty"`
+	// Align horizontal alignment of the buttons; must be one of "left", "center", or "right"
+	//
+	// optional
+	Align string `json:"align,omitempty"`
 }
+
+// Left returns true if the buttons are aligned to the left.
+func (b RichBlockButtons) Left() bool { return b.Align == RichBlockButtonsAlignLeft }
+
+// Center returns true if the buttons are centered.
+func (b RichBlockButtons) Center() bool { return b.Align == RichBlockButtonsAlignCenter }
+
+// Right returns true if the buttons are aligned to the right.
+func (b RichBlockButtons) Right() bool { return b.Align == RichBlockButtonsAlignRight }
 
 // RichBlockAnimation describes an animation block.
 type RichBlockAnimation struct {
@@ -2992,9 +3028,14 @@ type RichBlockAudio struct {
 
 // RichBlockDocument describes a document block.
 type RichBlockDocument struct {
-	Type     string            `json:"type"`
-	Document Document          `json:"document"`
-	Caption  *RichBlockCaption `json:"caption,omitempty"`
+	// Type type of the block, always "document"
+	Type string `json:"type"`
+	// Document the document
+	Document Document `json:"document"`
+	// Caption caption of the block
+	//
+	// optional
+	Caption *RichBlockCaption `json:"caption,omitempty"`
 }
 
 // RichBlockPhoto describes a photo block.
@@ -3096,8 +3137,13 @@ type InputRichBlockBlockQuotation struct {
 
 // InputRichBlockExpandableBlockQuotation describes an outgoing expandable block quotation.
 type InputRichBlockExpandableBlockQuotation struct {
-	Type   string   `json:"type"`
-	Text   RichText `json:"text"`
+	// Type type of the block, always "expandable_blockquote"
+	Type string `json:"type"`
+	// Text content of the block
+	Text RichText `json:"text"`
+	// Credit credit of the block
+	//
+	// optional
 	Credit RichText `json:"credit,omitempty"`
 }
 
@@ -3127,8 +3173,14 @@ type InputRichBlockTable struct {
 	Type       string                 `json:"type"`
 	Cells      [][]RichBlockTableCell `json:"cells"`
 	IsBordered bool                   `json:"is_bordered,omitempty"`
-	IsStriped  bool                   `json:"is_striped,omitempty"`
-	IsCompact  bool                   `json:"is_compact,omitempty"`
+	// IsStriped True, if the table is striped
+	//
+	// optional
+	IsStriped bool `json:"is_striped,omitempty"`
+	// IsCompact True, if table cells have smaller indents
+	//
+	// optional
+	IsCompact bool `json:"is_compact,omitempty"`
 	Caption    RichText               `json:"caption,omitempty"`
 }
 
@@ -3152,10 +3204,24 @@ type InputRichBlockMap struct {
 
 // InputRichBlockButtons describes an outgoing row of rich message buttons.
 type InputRichBlockButtons struct {
-	Type    string              `json:"type"`
+	// Type type of the block, always "buttons"
+	Type string `json:"type"`
+	// Buttons list of 1-8 buttons to send
 	Buttons []RichMessageButton `json:"buttons"`
-	Align   string              `json:"align,omitempty"`
+	// Align horizontal alignment of the buttons; must be one of "left", "center", or "right"
+	//
+	// optional
+	Align string `json:"align,omitempty"`
 }
+
+// Left returns true if the buttons are aligned to the left.
+func (b InputRichBlockButtons) Left() bool { return b.Align == RichBlockButtonsAlignLeft }
+
+// Center returns true if the buttons are centered.
+func (b InputRichBlockButtons) Center() bool { return b.Align == RichBlockButtonsAlignCenter }
+
+// Right returns true if the buttons are aligned to the right.
+func (b InputRichBlockButtons) Right() bool { return b.Align == RichBlockButtonsAlignRight }
 
 // InputRichBlockAnimation describes an outgoing animation block.
 type InputRichBlockAnimation struct {
@@ -3173,9 +3239,14 @@ type InputRichBlockAudio struct {
 
 // InputRichBlockDocument describes an outgoing document block.
 type InputRichBlockDocument struct {
-	Type     string             `json:"type"`
+	// Type type of the block, always "document"
+	Type string `json:"type"`
+	// Document the document; caption on the document is ignored
 	Document InputMediaDocument `json:"document"`
-	Caption  *RichBlockCaption  `json:"caption,omitempty"`
+	// Caption caption of the block
+	//
+	// optional
+	Caption *RichBlockCaption `json:"caption,omitempty"`
 }
 
 // InputRichBlockPhoto describes an outgoing photo block.
@@ -3800,7 +3871,11 @@ type ChatAdministratorRights struct {
 	CanManageTopics         bool `json:"can_manage_topics"`
 	CanManageDirectMessages bool `json:"can_manage_direct_messages,omitempty"`
 	CanManageTags           bool `json:"can_manage_tags,omitempty"`
-	CanSendWelcomeMessages  bool `json:"can_send_welcome_messages,omitempty"`
+	// CanSendWelcomeMessages True, if the administrator can manage chat welcome
+	// messages or directly send them in the case of bots.
+	//
+	// optional
+	CanSendWelcomeMessages bool `json:"can_send_welcome_messages,omitempty"`
 }
 
 // ChatMember contains information about one member of a chat.
@@ -7165,6 +7240,7 @@ type CommunityChatAdded struct {
 
 // CommunityChatJoined describes a chat being joined by a user from a community.
 type CommunityChatJoined struct {
+	// Community the community from which the chat was joined
 	Community Community `json:"community"`
 }
 
@@ -7173,35 +7249,108 @@ type CommunityChatRemoved struct{}
 
 // MessageGenerationStopped describes an update about a user stopping message generation.
 type MessageGenerationStopped struct {
-	Chat            Chat `json:"chat"`
-	MessageThreadID int  `json:"message_thread_id,omitempty"`
-	DraftID         int  `json:"draft_id"`
+	// Chat chat in which the message is generated
+	Chat Chat `json:"chat"`
+	// MessageThreadID unique identifier of the message thread in which the message is generated
+	//
+	// optional
+	MessageThreadID int `json:"message_thread_id,omitempty"`
+	// DraftID unique identifier of the message draft which was stopped
+	DraftID int `json:"draft_id"`
 }
 
 // EphemeralMessageParameters describes parameters of an ephemeral message to send.
 type EphemeralMessageParameters struct {
-	ReceiverUserID              int64  `json:"receiver_user_id"`
-	CallbackQueryID             string `json:"callback_query_id,omitempty"`
-	ReplaceCallbackQueryMessage bool   `json:"replace_callback_query_message,omitempty"`
+	// ReceiverUserID identifier of the user who will receive the message
+	ReceiverUserID int64 `json:"receiver_user_id"`
+	// CallbackQueryID identifier of the callback query which triggered the message, if any
+	//
+	// optional
+	CallbackQueryID string `json:"callback_query_id,omitempty"`
+	// ReplaceCallbackQueryMessage pass True to show the ephemeral message in place of
+	// the original message; must be False for callback queries from ephemeral messages
+	//
+	// optional
+	ReplaceCallbackQueryMessage bool `json:"replace_callback_query_message,omitempty"`
 }
 
 // DisabledButton represents a disabled button which does nothing.
 type DisabledButton struct{}
 
+// RichMessageButtonStyleDanger is the red button style.
+const RichMessageButtonStyleDanger = "danger"
+
+// RichMessageButtonStyleSuccess is the green button style.
+const RichMessageButtonStyleSuccess = "success"
+
+// RichMessageButtonStylePrimary is the blue button style.
+const RichMessageButtonStylePrimary = "primary"
+
+// RichMessageButtonStyleLink shows the button as a regular link without borders.
+const RichMessageButtonStyleLink = "link"
+
 // RichMessageButton represents a button in a RichMessage.
+//
+// Exactly one of the optional action fields must be used to specify the type of the button.
 type RichMessageButton struct {
-	Text                         RichText                     `json:"text"`
-	Style                        string                       `json:"style,omitempty"`
-	URL                          string                       `json:"url,omitempty"`
-	CallbackData                 string                       `json:"callback_data,omitempty"`
-	WebApp                       *WebAppInfo                  `json:"web_app,omitempty"`
-	LoginURL                     *LoginURL                    `json:"login_url,omitempty"`
-	SwitchInlineQuery            *string                      `json:"switch_inline_query,omitempty"`
-	SwitchInlineQueryCurrentChat *string                      `json:"switch_inline_query_current_chat,omitempty"`
-	SwitchInlineQueryChosenChat  *SwitchInlineQueryChosenChat `json:"switch_inline_query_chosen_chat,omitempty"`
-	CopyText                     *CopyTextButton              `json:"copy_text,omitempty"`
-	Disabled                     *DisabledButton              `json:"disabled,omitempty"`
+	// Text text of the button; may contain only plain text, RichTextCustomEmoji and RichTextDateTime entities
+	Text RichText `json:"text"`
+	// Style style of the button; must be one of "danger", "success", "primary", or "link"
+	//
+	// optional
+	Style string `json:"style,omitempty"`
+	// URL HTTP or tg:// URL to be opened when the button is pressed
+	//
+	// optional
+	URL string `json:"url,omitempty"`
+	// CallbackData data to be sent in a callback query to the bot when the button is pressed, 1-64 bytes
+	//
+	// optional
+	CallbackData string `json:"callback_data,omitempty"`
+	// WebApp description of the Web App that will be launched when the user presses the button
+	//
+	// optional
+	WebApp *WebAppInfo `json:"web_app,omitempty"`
+	// LoginURL an HTTPS URL used to automatically authorize the user; not supported for ephemeral messages
+	//
+	// optional
+	LoginURL *LoginURL `json:"login_url,omitempty"`
+	// SwitchInlineQuery if set, pressing the button will prompt the user to select one of their chats,
+	// open that chat and insert the bot's username and the specified inline query in the input field
+	//
+	// optional
+	SwitchInlineQuery *string `json:"switch_inline_query,omitempty"`
+	// SwitchInlineQueryCurrentChat if set, pressing the button will insert the bot's username and the
+	// specified inline query in the current chat's input field
+	//
+	// optional
+	SwitchInlineQueryCurrentChat *string `json:"switch_inline_query_current_chat,omitempty"`
+	// SwitchInlineQueryChosenChat if set, pressing the button will prompt the user to select one of their
+	// chats of the specified type and insert the bot's username and the specified inline query
+	//
+	// optional
+	SwitchInlineQueryChosenChat *SwitchInlineQueryChosenChat `json:"switch_inline_query_chosen_chat,omitempty"`
+	// CopyText a button that copies the specified text to the clipboard
+	//
+	// optional
+	CopyText *CopyTextButton `json:"copy_text,omitempty"`
+	// Disabled if set, then the button is disabled and does nothing
+	//
+	// optional
+	Disabled *DisabledButton `json:"disabled,omitempty"`
 }
+
+// Danger returns true if the button uses the danger style.
+func (b RichMessageButton) Danger() bool { return b.Style == RichMessageButtonStyleDanger }
+
+// Success returns true if the button uses the success style.
+func (b RichMessageButton) Success() bool { return b.Style == RichMessageButtonStyleSuccess }
+
+// Primary returns true if the button uses the primary style.
+func (b RichMessageButton) Primary() bool { return b.Style == RichMessageButtonStylePrimary }
+
+// LinkStyle returns true if the button uses the link style.
+func (b RichMessageButton) LinkStyle() bool { return b.Style == RichMessageButtonStyleLink }
 
 // PollOptionAdded describes a service message about an option added to a poll.
 type PollOptionAdded struct {
@@ -7507,16 +7656,25 @@ type UniqueGift struct {
 
 // UniqueGiftInfo describes information about a unique gift in a message.
 type UniqueGiftInfo struct {
-	Gift               UniqueGift      `json:"gift"`
-	Origin             string          `json:"origin"`
-	Text               string          `json:"text,omitempty"`
-	Entities           []MessageEntity `json:"entities,omitempty"`
-	IsPrivate          bool            `json:"is_private,omitempty"`
-	LastResaleCurrency string          `json:"last_resale_currency,omitempty"`
-	LastResaleAmount   int             `json:"last_resale_amount,omitempty"`
-	OwnedGiftID        string          `json:"owned_gift_id,omitempty"`
-	TransferStarCount  int             `json:"transfer_star_count,omitempty"`
-	NextTransferDate   int64           `json:"next_transfer_date,omitempty"`
+	Gift   UniqueGift `json:"gift"`
+	Origin string     `json:"origin"`
+	// Text text of the message that was added to the gift
+	//
+	// optional
+	Text string `json:"text,omitempty"`
+	// Entities special entities that appear in the text
+	//
+	// optional
+	Entities []MessageEntity `json:"entities,omitempty"`
+	// IsPrivate True, if the sender and gift text are shown only to the gift receiver
+	//
+	// optional
+	IsPrivate          bool   `json:"is_private,omitempty"`
+	LastResaleCurrency string `json:"last_resale_currency,omitempty"`
+	LastResaleAmount   int    `json:"last_resale_amount,omitempty"`
+	OwnedGiftID        string `json:"owned_gift_id,omitempty"`
+	TransferStarCount  int    `json:"transfer_star_count,omitempty"`
+	NextTransferDate   int64  `json:"next_transfer_date,omitempty"`
 }
 
 // UserProfileAudios contains audios displayed on user profile.

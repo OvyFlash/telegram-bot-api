@@ -58,7 +58,7 @@ An incoming ephemeral command has `Message.MessageID == 0` and a separate `Messa
 ```go
 incoming := update.Message
 reply := tgbotapi.NewMessage(incoming.Chat.ID, "Checking...")
-reply.EphemeralMessageParameters = &tgbotapi.EphemeralMessageParameters{
+reply.EphemeralMessageParameters = tgbotapi.EphemeralMessageParameters{
 	ReceiverUserID: incoming.From.ID,
 }
 reply.ReplyParameters.EphemeralMessageID = incoming.EphemeralMessageID

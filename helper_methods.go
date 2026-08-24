@@ -928,7 +928,7 @@ func newBaseEphemeralMessage(chatID, receiverUserID int64, ephemeralMessageID in
 // ReplyParameters.EphemeralMessageID within 15 seconds of an eligible action.
 func NewEphemeralMessage(chatID, receiverUserID int64, text string) MessageConfig {
 	config := NewMessage(chatID, text)
-	config.EphemeralMessageParameters = &EphemeralMessageParameters{
+	config.EphemeralMessageParameters = EphemeralMessageParameters{
 		ReceiverUserID: receiverUserID,
 	}
 	return config

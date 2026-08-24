@@ -180,7 +180,7 @@ func TestBotAPI102NewEphemeralMessageDirectAdminParams(t *testing.T) {
 }
 
 func TestBotAPI102EphemeralSendParams(t *testing.T) {
-	ephemeral := &EphemeralMessageParameters{ReceiverUserID: 42, CallbackQueryID: "callback"}
+	ephemeral := EphemeralMessageParameters{ReceiverUserID: 42, CallbackQueryID: "callback"}
 	message := NewMessage(1, "text")
 	message.EphemeralMessageParameters = ephemeral
 	animation := NewAnimation(1, FileID("animation"))

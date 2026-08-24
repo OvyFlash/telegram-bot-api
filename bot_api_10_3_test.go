@@ -8,7 +8,7 @@ import (
 
 func TestBotAPI103EphemeralMessageParameters(t *testing.T) {
 	config := NewSendRichMessage(1, NewInputRichMessageHTML("<p>hi</p>"))
-	config.EphemeralMessageParameters = &EphemeralMessageParameters{
+	config.EphemeralMessageParameters = EphemeralMessageParameters{
 		ReceiverUserID:              42,
 		CallbackQueryID:             "cbq",
 		ReplaceCallbackQueryMessage: true,
@@ -120,7 +120,7 @@ func TestBotAPI103NewTypesJSON(t *testing.T) {
 		},
 		{
 			name:  "buttons block",
-			value: RichBlockButtons{Type: "buttons", Buttons: []RichMessageButton{{Text: "A", CallbackData: "a"}}, Align: "center"},
+			value: RichBlockButtons{Type: "buttons", Buttons: []RichMessageButton{{Text: "A", CallbackData: "a"}}, Align: RichBlockButtonsAlignCenter},
 			want:  `"align":"center"`,
 		},
 		{
@@ -197,6 +197,25 @@ func TestBotAPI103NewTypesJSON(t *testing.T) {
 				t.Fatalf("got %s, want substring %q", raw, test.want)
 			}
 		})
+	}
+}
+
+func TestBotAPI103RichBlockButtonsAlign(t *testing.T) {
+	block := RichBlockButtons{Align: RichBlockButtonsAlignCenter}
+	if !block.Center() || block.Left() || block.Right() {
+		t.Fatalf("unexpected align helpers: %#v", block)
+	}
+
+	input := InputRichBlockButtons{Align: RichBlockButtonsAlignRight}
+	if !input.Right() || input.Left() || input.Center() {
+		t.Fatalf("unexpected input align helpers: %#v", input)
+	}
+}
+
+func TestBotAPI103RichMessageButtonStyle(t *testing.T) {
+	button := RichMessageButton{Style: RichMessageButtonStylePrimary}
+	if !button.Primary() || button.Danger() || button.LinkStyle() {
+		t.Fatalf("unexpected style helpers: %#v", button)
 	}
 }
 
