@@ -29,14 +29,17 @@ func TestBotAPI102InputRichBlockJSONContract(t *testing.T) {
 		{name: "anchor", block: InputRichBlockAnchor{Type: "anchor", Name: "intro"}, typeName: "anchor", fieldMatch: `"name":"intro"`},
 		{name: "list", block: InputRichBlockList{Type: "list", Items: []InputRichBlockListItem{{Blocks: []InputRichBlock{InputRichBlockParagraph{Type: "paragraph", Text: "item"}}, HasCheckbox: true}}}, typeName: "list", fieldMatch: `"has_checkbox":true`},
 		{name: "block quotation", block: InputRichBlockBlockQuotation{Type: "blockquote", Blocks: []InputRichBlock{InputRichBlockParagraph{Type: "paragraph", Text: "quote"}}, Credit: "author"}, typeName: "blockquote", fieldMatch: `"credit":"author"`},
+		{name: "expandable quotation", block: InputRichBlockExpandableBlockQuotation{Type: "expandable_blockquote", Text: "quote", Credit: "author"}, typeName: "expandable_blockquote", fieldMatch: `"credit":"author"`},
 		{name: "pull quotation", block: InputRichBlockPullQuotation{Type: "pullquote", Text: "quote", Credit: "author"}, typeName: "pullquote", fieldMatch: `"credit":"author"`},
 		{name: "collage", block: InputRichBlockCollage{Type: "collage", Blocks: []InputRichBlock{InputRichBlockPhoto{Type: "photo", Photo: photo}}}, typeName: "collage", fieldMatch: `"blocks":[`},
 		{name: "slideshow", block: InputRichBlockSlideshow{Type: "slideshow", Blocks: []InputRichBlock{InputRichBlockPhoto{Type: "photo", Photo: photo}}}, typeName: "slideshow", fieldMatch: `"blocks":[`},
-		{name: "table", block: InputRichBlockTable{Type: "table", Cells: [][]RichBlockTableCell{{{Text: "cell", Align: "left", Valign: "middle"}}}, IsBordered: true}, typeName: "table", fieldMatch: `"is_bordered":true`},
+		{name: "table", block: InputRichBlockTable{Type: "table", Cells: [][]RichBlockTableCell{{{Text: "cell", Align: "left", Valign: "middle"}}}, IsBordered: true, IsCompact: true}, typeName: "table", fieldMatch: `"is_compact":true`},
 		{name: "details", block: InputRichBlockDetails{Type: "details", Summary: "summary", Blocks: []InputRichBlock{InputRichBlockParagraph{Type: "paragraph", Text: "body"}}, IsOpen: true}, typeName: "details", fieldMatch: `"is_open":true`},
 		{name: "map", block: InputRichBlockMap{Type: "map", Location: Location{Latitude: 10.5, Longitude: 20.25}, Zoom: 12, Width: 640, Height: 480}, typeName: "map", fieldMatch: `"zoom":12`},
+		{name: "buttons", block: InputRichBlockButtons{Type: "buttons", Buttons: []RichMessageButton{{Text: "Go", CallbackData: "go"}}, Align: "center"}, typeName: "buttons", fieldMatch: `"align":"center"`},
 		{name: "animation", block: InputRichBlockAnimation{Type: "animation", Animation: animation}, typeName: "animation", fieldMatch: `"animation":{"type":"animation","media":"animation"}`},
 		{name: "audio", block: InputRichBlockAudio{Type: "audio", Audio: audio}, typeName: "audio", fieldMatch: `"audio":{"type":"audio","media":"audio"}`},
+		{name: "document", block: InputRichBlockDocument{Type: "document", Document: NewInputMediaDocument(FileID("document"))}, typeName: "document", fieldMatch: `"document":{"type":"document","media":"document"}`},
 		{name: "photo", block: InputRichBlockPhoto{Type: "photo", Photo: photo}, typeName: "photo", fieldMatch: `"photo":{"type":"photo","media":"photo"}`},
 		{name: "video", block: InputRichBlockVideo{Type: "video", Video: video}, typeName: "video", fieldMatch: `"video":{"type":"video","media":"video"}`},
 		{name: "voice note", block: InputRichBlockVoiceNote{Type: "voice_note", VoiceNote: voiceNote}, typeName: "voice_note", fieldMatch: `"voice_note":{"type":"voice_note","media":"voice"}`},
@@ -158,11 +161,18 @@ func TestBotAPI102NewEphemeralMessageDirectAdminParams(t *testing.T) {
 	if err != nil {
 		t.Fatalf("params: %v", err)
 	}
-	if params["chat_id"] != "-1001" || params["receiver_user_id"] != "42" || params["text"] != "private" {
+	if params["chat_id"] != "-1001" || params["text"] != "private" {
 		t.Fatalf("direct admin ephemeral params mismatch: %#v", params)
 	}
-	if _, ok := params["callback_query_id"]; ok {
-		t.Fatalf("direct admin request unexpectedly contains callback query: %#v", params)
+	raw, ok := params["ephemeral_message_parameters"]
+	if !ok {
+		t.Fatalf("missing ephemeral_message_parameters: %#v", params)
+	}
+	if !strings.Contains(raw, `"receiver_user_id":42`) {
+		t.Fatalf("unexpected ephemeral_message_parameters: %s", raw)
+	}
+	if strings.Contains(raw, "callback_query_id") {
+		t.Fatalf("direct admin request unexpectedly contains callback query: %s", raw)
 	}
 	if _, ok := params["reply_parameters"]; ok {
 		t.Fatalf("direct admin request unexpectedly contains reply parameters: %#v", params)
@@ -170,32 +180,33 @@ func TestBotAPI102NewEphemeralMessageDirectAdminParams(t *testing.T) {
 }
 
 func TestBotAPI102EphemeralSendParams(t *testing.T) {
+	ephemeral := &EphemeralMessageParameters{ReceiverUserID: 42, CallbackQueryID: "callback"}
 	message := NewMessage(1, "text")
-	message.ReceiverUserID, message.CallbackQueryID = 42, "callback"
+	message.EphemeralMessageParameters = ephemeral
 	animation := NewAnimation(1, FileID("animation"))
-	animation.ReceiverUserID, animation.CallbackQueryID = 42, "callback"
+	animation.EphemeralMessageParameters = ephemeral
 	audio := NewAudio(1, FileID("audio"))
-	audio.ReceiverUserID, audio.CallbackQueryID = 42, "callback"
+	audio.EphemeralMessageParameters = ephemeral
 	document := NewDocument(1, FileID("document"))
-	document.ReceiverUserID, document.CallbackQueryID = 42, "callback"
+	document.EphemeralMessageParameters = ephemeral
 	photo := NewPhoto(1, FileID("photo"))
-	photo.ReceiverUserID, photo.CallbackQueryID = 42, "callback"
+	photo.EphemeralMessageParameters = ephemeral
 	livePhoto := NewLivePhoto(1, FileID("live-photo"), FileID("photo"))
-	livePhoto.ReceiverUserID, livePhoto.CallbackQueryID = 42, "callback"
+	livePhoto.EphemeralMessageParameters = ephemeral
 	sticker := NewSticker(1, FileID("sticker"))
-	sticker.ReceiverUserID, sticker.CallbackQueryID = 42, "callback"
+	sticker.EphemeralMessageParameters = ephemeral
 	video := NewVideo(1, FileID("video"))
-	video.ReceiverUserID, video.CallbackQueryID = 42, "callback"
+	video.EphemeralMessageParameters = ephemeral
 	videoNote := NewVideoNote(1, 10, FileID("video-note"))
-	videoNote.ReceiverUserID, videoNote.CallbackQueryID = 42, "callback"
+	videoNote.EphemeralMessageParameters = ephemeral
 	voice := NewVoice(1, FileID("voice"))
-	voice.ReceiverUserID, voice.CallbackQueryID = 42, "callback"
+	voice.EphemeralMessageParameters = ephemeral
 	contact := NewContact(1, "+12025550123", "Ada")
-	contact.ReceiverUserID, contact.CallbackQueryID = 42, "callback"
+	contact.EphemeralMessageParameters = ephemeral
 	location := NewLocation(1, 10.5, 20.25)
-	location.ReceiverUserID, location.CallbackQueryID = 42, "callback"
+	location.EphemeralMessageParameters = ephemeral
 	venue := NewVenue(1, "Office", "Main Street", 10.5, 20.25)
-	venue.ReceiverUserID, venue.CallbackQueryID = 42, "callback"
+	venue.EphemeralMessageParameters = ephemeral
 
 	configs := []struct {
 		method string
@@ -224,8 +235,12 @@ func TestBotAPI102EphemeralSendParams(t *testing.T) {
 			if err != nil {
 				t.Fatalf("params: %v", err)
 			}
-			if params["receiver_user_id"] != "42" || params["callback_query_id"] != "callback" {
-				t.Fatalf("ephemeral send params mismatch: %#v", params)
+			raw, ok := params["ephemeral_message_parameters"]
+			if !ok {
+				t.Fatalf("missing ephemeral_message_parameters: %#v", params)
+			}
+			if !strings.Contains(raw, `"receiver_user_id":42`) || !strings.Contains(raw, `"callback_query_id":"callback"`) {
+				t.Fatalf("ephemeral send params mismatch: %s", raw)
 			}
 		})
 	}
@@ -235,11 +250,8 @@ func TestBotAPI102EphemeralSendParams(t *testing.T) {
 	if err != nil {
 		t.Fatalf("chat action params: %v", err)
 	}
-	if _, ok := params["receiver_user_id"]; ok {
-		t.Fatalf("receiver_user_id leaked into unsupported method: %#v", params)
-	}
-	if _, ok := params["callback_query_id"]; ok {
-		t.Fatalf("callback_query_id leaked into unsupported method: %#v", params)
+	if _, ok := params["ephemeral_message_parameters"]; ok {
+		t.Fatalf("ephemeral_message_parameters leaked into unsupported method: %#v", params)
 	}
 }
 
@@ -247,7 +259,7 @@ func TestBotAPI102EphemeralLifecycleParams(t *testing.T) {
 	markup := NewInlineKeyboardMarkup(NewInlineKeyboardRow(NewInlineKeyboardButtonData("Done", "done")))
 	text := NewEditEphemeralMessageText(1, 2, 3, "updated")
 	text.ParseMode = ModeMarkdownV2
-	mediaValue := NewInputMediaPhoto(FileBytes{Name: "photo.jpg", Bytes: []byte("photo")})
+	mediaValue := NewInputMediaPhoto(FileID("photo"))
 	media := NewEditEphemeralMessageMedia(1, 2, 3, &mediaValue)
 	caption := NewEditEphemeralMessageCaption(1, 2, 3, "")
 	replyMarkup := NewEditEphemeralMessageReplyMarkup(1, 2, 3, markup)
@@ -260,7 +272,7 @@ func TestBotAPI102EphemeralLifecycleParams(t *testing.T) {
 		value  string
 	}{
 		{config: text, method: "editEphemeralMessageText", key: "text", value: "updated"},
-		{config: media, method: "editEphemeralMessageMedia", key: "media", value: `{"type":"photo","media":{"Name":"photo.jpg","Bytes":"cGhvdG8="}}`},
+		{config: media, method: "editEphemeralMessageMedia", key: "media", value: `{"type":"photo","media":"photo"}`},
 		{config: caption, method: "editEphemeralMessageCaption", key: "caption", value: ""},
 		{config: replyMarkup, method: "editEphemeralMessageReplyMarkup", key: "reply_markup", value: `{"inline_keyboard":[[{"text":"Done","callback_data":"done"}]]}`},
 		{config: deleteMessage, method: "deleteEphemeralMessage"},
@@ -281,14 +293,21 @@ func TestBotAPI102EphemeralLifecycleParams(t *testing.T) {
 			if test.key != "" {
 				value, ok := params[test.key]
 				if !ok || value != test.value {
-					t.Fatalf("%s mismatch: %#v", test.key, params)
+					t.Fatalf("%s mismatch: got %q want %q in %#v", test.key, value, test.value, params)
 				}
 			}
 		})
 	}
 
-	if _, ok := any(media).(Fileable); ok {
-		t.Fatal("ephemeral media edit must not support direct file uploads")
+	uploadMedia := NewInputMediaPhoto(FileBytes{Name: "photo.jpg", Bytes: []byte("photo")})
+	uploadConfig := NewEditEphemeralMessageMedia(1, 2, 3, &uploadMedia)
+	fileable, ok := any(uploadConfig).(Fileable)
+	if !ok {
+		t.Fatal("ephemeral media edit must support direct file uploads")
+	}
+	files := fileable.files()
+	if len(files) != 1 || files[0].Name != "file-0" {
+		t.Fatalf("unexpected ephemeral media upload files: %#v", files)
 	}
 }
 
