@@ -167,6 +167,10 @@ type Update struct {
 	//
 	// optional
 	Subscription *BotSubscriptionUpdated `json:"subscription,omitempty"`
+	// StoppedMessageGeneration is emitted when a user stops message generation.
+	//
+	// optional
+	StoppedMessageGeneration *MessageGenerationStopped `json:"stopped_message_generation,omitempty"`
 }
 
 // SentFrom returns the user who sent an update. Can be nil, if Telegram did not provide information
@@ -267,6 +271,8 @@ func (u *Update) FromChat() *Chat {
 		return &u.ChatBoost.Chat
 	case u.ChatBoostRemoved != nil:
 		return &u.ChatBoostRemoved.Chat
+	case u.StoppedMessageGeneration != nil:
+		return &u.StoppedMessageGeneration.Chat
 	default:
 		return nil
 	}
@@ -1089,6 +1095,10 @@ type Message struct {
 	//
 	// optional
 	CommunityChatAdded *CommunityChatAdded `json:"community_chat_added,omitempty"`
+	// CommunityChatJoined is a service message about a chat being joined from a community.
+	//
+	// optional
+	CommunityChatJoined *CommunityChatJoined `json:"community_chat_joined,omitempty"`
 	// CommunityChatRemoved is a service message about a chat being removed from a community.
 	//
 	// optional
@@ -2784,6 +2794,12 @@ type RichTextBotCommand struct {
 	BotCommand string   `json:"bot_command"`
 }
 
+// RichTextButton describes a rich text button.
+type RichTextButton struct {
+	Type   string            `json:"type"`
+	Button RichMessageButton `json:"button"`
+}
+
 // RichTextAnchor describes an anchor.
 type RichTextAnchor struct {
 	Type string `json:"type"`
@@ -2896,6 +2912,13 @@ type RichBlockBlockQuotation struct {
 	Credit RichText    `json:"credit,omitempty"`
 }
 
+// RichBlockExpandableBlockQuotation describes an expandable block quotation.
+type RichBlockExpandableBlockQuotation struct {
+	Type   string   `json:"type"`
+	Text   RichText `json:"text"`
+	Credit RichText `json:"credit,omitempty"`
+}
+
 // RichBlockPullQuotation describes a pull quotation.
 type RichBlockPullQuotation struct {
 	Type   string   `json:"type"`
@@ -2923,6 +2946,7 @@ type RichBlockTable struct {
 	Cells      [][]RichBlockTableCell `json:"cells"`
 	IsBordered bool                   `json:"is_bordered,omitempty"`
 	IsStriped  bool                   `json:"is_striped,omitempty"`
+	IsCompact  bool                   `json:"is_compact,omitempty"`
 	Caption    RichText               `json:"caption,omitempty"`
 }
 
@@ -2944,6 +2968,13 @@ type RichBlockMap struct {
 	Caption  *RichBlockCaption `json:"caption,omitempty"`
 }
 
+// RichBlockButtons describes a row of rich message buttons.
+type RichBlockButtons struct {
+	Type    string              `json:"type"`
+	Buttons []RichMessageButton `json:"buttons"`
+	Align   string              `json:"align,omitempty"`
+}
+
 // RichBlockAnimation describes an animation block.
 type RichBlockAnimation struct {
 	Type       string            `json:"type"`
@@ -2957,6 +2988,13 @@ type RichBlockAudio struct {
 	Type    string            `json:"type"`
 	Audio   Audio             `json:"audio"`
 	Caption *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// RichBlockDocument describes a document block.
+type RichBlockDocument struct {
+	Type     string            `json:"type"`
+	Document Document          `json:"document"`
+	Caption  *RichBlockCaption `json:"caption,omitempty"`
 }
 
 // RichBlockPhoto describes a photo block.
@@ -3056,6 +3094,13 @@ type InputRichBlockBlockQuotation struct {
 	Credit RichText         `json:"credit,omitempty"`
 }
 
+// InputRichBlockExpandableBlockQuotation describes an outgoing expandable block quotation.
+type InputRichBlockExpandableBlockQuotation struct {
+	Type   string   `json:"type"`
+	Text   RichText `json:"text"`
+	Credit RichText `json:"credit,omitempty"`
+}
+
 // InputRichBlockPullQuotation describes an outgoing pull quotation.
 type InputRichBlockPullQuotation struct {
 	Type   string   `json:"type"`
@@ -3083,6 +3128,7 @@ type InputRichBlockTable struct {
 	Cells      [][]RichBlockTableCell `json:"cells"`
 	IsBordered bool                   `json:"is_bordered,omitempty"`
 	IsStriped  bool                   `json:"is_striped,omitempty"`
+	IsCompact  bool                   `json:"is_compact,omitempty"`
 	Caption    RichText               `json:"caption,omitempty"`
 }
 
@@ -3104,6 +3150,13 @@ type InputRichBlockMap struct {
 	Caption  *RichBlockCaption `json:"caption,omitempty"`
 }
 
+// InputRichBlockButtons describes an outgoing row of rich message buttons.
+type InputRichBlockButtons struct {
+	Type    string              `json:"type"`
+	Buttons []RichMessageButton `json:"buttons"`
+	Align   string              `json:"align,omitempty"`
+}
+
 // InputRichBlockAnimation describes an outgoing animation block.
 type InputRichBlockAnimation struct {
 	Type      string              `json:"type"`
@@ -3116,6 +3169,13 @@ type InputRichBlockAudio struct {
 	Type    string            `json:"type"`
 	Audio   InputMediaAudio   `json:"audio"`
 	Caption *RichBlockCaption `json:"caption,omitempty"`
+}
+
+// InputRichBlockDocument describes an outgoing document block.
+type InputRichBlockDocument struct {
+	Type     string             `json:"type"`
+	Document InputMediaDocument `json:"document"`
+	Caption  *RichBlockCaption  `json:"caption,omitempty"`
 }
 
 // InputRichBlockPhoto describes an outgoing photo block.
@@ -3228,6 +3288,11 @@ type ReplyKeyboardMarkup struct {
 	//
 	// optional
 	Selective bool `json:"selective,omitempty"`
+	// ForceReply shows reply interface to the user, as if they manually
+	// selected the bot's message and tapped 'Reply'.
+	//
+	// optional
+	ForceReply bool `json:"force_reply,omitempty"`
 }
 
 // KeyboardButton represents one button of the reply keyboard. For simple text
@@ -3437,6 +3502,12 @@ type InlineKeyboardMarkup struct {
 	// InlineKeyboard array of button rows, each represented by an Array of
 	// InlineKeyboardButton objects
 	InlineKeyboard [][]InlineKeyboardButton `json:"inline_keyboard"`
+	// ForceReply shows reply interface to the user, as if they manually
+	// selected the bot's message and tapped 'Reply'. The value of the field
+	// can't be changed when the inline keyboard is edited.
+	//
+	// optional
+	ForceReply bool `json:"force_reply,omitempty"`
 }
 
 // InlineKeyboardButton represents one button of an inline keyboard. You must
@@ -3524,6 +3595,10 @@ type InlineKeyboardButton struct {
 	//
 	// optional
 	Pay bool `json:"pay,omitempty"`
+	// Disabled marks the button as disabled so it does nothing.
+	//
+	// optional
+	Disabled *DisabledButton `json:"disabled,omitempty"`
 }
 
 // LoginURL represents a parameter of the inline keyboard button used to
@@ -3725,6 +3800,7 @@ type ChatAdministratorRights struct {
 	CanManageTopics         bool `json:"can_manage_topics"`
 	CanManageDirectMessages bool `json:"can_manage_direct_messages,omitempty"`
 	CanManageTags           bool `json:"can_manage_tags,omitempty"`
+	CanSendWelcomeMessages  bool `json:"can_send_welcome_messages,omitempty"`
 }
 
 // ChatMember contains information about one member of a chat.
@@ -3916,6 +3992,11 @@ type ChatMember struct {
 	//
 	// optional
 	CanManageTags bool `json:"can_manage_tags,omitempty"`
+	// CanSendWelcomeMessages True, if the administrator can manage chat welcome
+	// messages or directly send them in the case of bots.
+	//
+	// optional
+	CanSendWelcomeMessages bool `json:"can_send_welcome_messages,omitempty"`
 	// CanEditTag True, if the user is allowed to edit their own tag.
 	//
 	// optional
@@ -7082,8 +7163,45 @@ type CommunityChatAdded struct {
 	Community Community `json:"community"`
 }
 
+// CommunityChatJoined describes a chat being joined by a user from a community.
+type CommunityChatJoined struct {
+	Community Community `json:"community"`
+}
+
 // CommunityChatRemoved describes a chat being removed from a community.
 type CommunityChatRemoved struct{}
+
+// MessageGenerationStopped describes an update about a user stopping message generation.
+type MessageGenerationStopped struct {
+	Chat            Chat `json:"chat"`
+	MessageThreadID int  `json:"message_thread_id,omitempty"`
+	DraftID         int  `json:"draft_id"`
+}
+
+// EphemeralMessageParameters describes parameters of an ephemeral message to send.
+type EphemeralMessageParameters struct {
+	ReceiverUserID              int64  `json:"receiver_user_id"`
+	CallbackQueryID             string `json:"callback_query_id,omitempty"`
+	ReplaceCallbackQueryMessage bool   `json:"replace_callback_query_message,omitempty"`
+}
+
+// DisabledButton represents a disabled button which does nothing.
+type DisabledButton struct{}
+
+// RichMessageButton represents a button in a RichMessage.
+type RichMessageButton struct {
+	Text                         RichText                     `json:"text"`
+	Style                        string                       `json:"style,omitempty"`
+	URL                          string                       `json:"url,omitempty"`
+	CallbackData                 string                       `json:"callback_data,omitempty"`
+	WebApp                       *WebAppInfo                  `json:"web_app,omitempty"`
+	LoginURL                     *LoginURL                    `json:"login_url,omitempty"`
+	SwitchInlineQuery            *string                      `json:"switch_inline_query,omitempty"`
+	SwitchInlineQueryCurrentChat *string                      `json:"switch_inline_query_current_chat,omitempty"`
+	SwitchInlineQueryChosenChat  *SwitchInlineQueryChosenChat `json:"switch_inline_query_chosen_chat,omitempty"`
+	CopyText                     *CopyTextButton              `json:"copy_text,omitempty"`
+	Disabled                     *DisabledButton              `json:"disabled,omitempty"`
+}
 
 // PollOptionAdded describes a service message about an option added to a poll.
 type PollOptionAdded struct {
@@ -7389,13 +7507,16 @@ type UniqueGift struct {
 
 // UniqueGiftInfo describes information about a unique gift in a message.
 type UniqueGiftInfo struct {
-	Gift               UniqueGift `json:"gift"`
-	Origin             string     `json:"origin"`
-	LastResaleCurrency string     `json:"last_resale_currency,omitempty"`
-	LastResaleAmount   int        `json:"last_resale_amount,omitempty"`
-	OwnedGiftID        string     `json:"owned_gift_id,omitempty"`
-	TransferStarCount  int        `json:"transfer_star_count,omitempty"`
-	NextTransferDate   int64      `json:"next_transfer_date,omitempty"`
+	Gift               UniqueGift      `json:"gift"`
+	Origin             string          `json:"origin"`
+	Text               string          `json:"text,omitempty"`
+	Entities           []MessageEntity `json:"entities,omitempty"`
+	IsPrivate          bool            `json:"is_private,omitempty"`
+	LastResaleCurrency string          `json:"last_resale_currency,omitempty"`
+	LastResaleAmount   int             `json:"last_resale_amount,omitempty"`
+	OwnedGiftID        string          `json:"owned_gift_id,omitempty"`
+	TransferStarCount  int             `json:"transfer_star_count,omitempty"`
+	NextTransferDate   int64           `json:"next_transfer_date,omitempty"`
 }
 
 // UserProfileAudios contains audios displayed on user profile.
