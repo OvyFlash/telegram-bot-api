@@ -2959,8 +2959,8 @@ type RichBlockTable struct {
 	// IsCompact True, if table cells have smaller indents
 	//
 	// optional
-	IsCompact bool `json:"is_compact,omitempty"`
-	Caption    RichText               `json:"caption,omitempty"`
+	IsCompact bool     `json:"is_compact,omitempty"`
+	Caption   RichText `json:"caption,omitempty"`
 }
 
 // RichBlockDetails describes an expandable details block.
@@ -3180,8 +3180,8 @@ type InputRichBlockTable struct {
 	// IsCompact True, if table cells have smaller indents
 	//
 	// optional
-	IsCompact bool `json:"is_compact,omitempty"`
-	Caption    RichText               `json:"caption,omitempty"`
+	IsCompact bool     `json:"is_compact,omitempty"`
+	Caption   RichText `json:"caption,omitempty"`
 }
 
 // InputRichBlockDetails describes an outgoing details block.

@@ -740,7 +740,7 @@ type DocumentConfig struct {
 	ParseMode                   string
 	CaptionEntities             []MessageEntity
 	DisableContentTypeDetection bool
-	EphemeralMessageParameters EphemeralMessageParameters
+	EphemeralMessageParameters  EphemeralMessageParameters
 }
 
 func (config DocumentConfig) params() (Params, error) {
