@@ -39,7 +39,7 @@ richMessage.Media = []tgbotapi.InputRichMessageMedia{
 _, err := bot.SendRichMessage(tgbotapi.NewSendRichMessage(chatID, richMessage))
 ```
 
-Exactly one of `HTML`, `Markdown`, or `Blocks` must be used. Direct upload of new files is not available for `SendRichMessageDraftConfig` or inline `EditMessageTextConfig`; use a Telegram `file_id` or an HTTP URL there.
+Exactly one of `HTML`, `Markdown`, or `Blocks` must be used. Direct upload of new files is not available for `SendRichMessageDraftConfig` or inline `EditMessageTextConfig`; use a Telegram `file_id` there.
 
 ## Ephemeral Commands and Messages
 

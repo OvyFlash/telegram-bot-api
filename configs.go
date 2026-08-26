@@ -932,6 +932,9 @@ func (config VideoNoteConfig) params() (Params, error) {
 
 	params.AddNonZero("duration", config.Duration)
 	params.AddNonZero("length", config.Length)
+	if err != nil {
+		return params, err
+	}
 	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
@@ -1072,6 +1075,9 @@ func (config LocationConfig) params() (Params, error) {
 	params.AddNonZero("live_period", config.LivePeriod)
 	params.AddNonZero("heading", config.Heading)
 	params.AddNonZero("proximity_alert_radius", config.ProximityAlertRadius)
+	if err != nil {
+		return params, err
+	}
 	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
@@ -1149,6 +1155,9 @@ func (config VenueConfig) params() (Params, error) {
 	params.AddNonEmpty("foursquare_type", config.FoursquareType)
 	params.AddNonEmpty("google_place_id", config.GooglePlaceID)
 	params.AddNonEmpty("google_place_type", config.GooglePlaceType)
+	if err != nil {
+		return params, err
+	}
 	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
@@ -1178,6 +1187,9 @@ func (config ContactConfig) params() (Params, error) {
 
 	params.AddNonEmpty("last_name", config.LastName)
 	params.AddNonEmpty("vcard", config.VCard)
+	if err != nil {
+		return params, err
+	}
 	if err = params.AddInterfaceNonZero("ephemeral_message_parameters", config.EphemeralMessageParameters); err != nil {
 		return params, err
 	}
@@ -1526,7 +1538,7 @@ type EditEphemeralMessageTextConfig struct {
 	Text               string
 	ParseMode          string
 	Entities           []MessageEntity
-	RichMessage        *InputRichMessage
+	RichMessage        InputRichMessage
 	LinkPreviewOptions LinkPreviewOptions
 	ReplyMarkup        *InlineKeyboardMarkup
 }
@@ -1542,11 +1554,8 @@ func (config EditEphemeralMessageTextConfig) params() (Params, error) {
 	if err = params.AddInterface("entities", config.Entities); err != nil {
 		return params, err
 	}
-	if config.RichMessage != nil {
-		prepared := prepareInputRichMessageForParams(*config.RichMessage)
-		if err = params.AddInterface("rich_message", prepared); err != nil {
-			return params, err
-		}
+	if err = params.AddInterfaceNonZero("rich_message", prepareInputRichMessageForParams(config.RichMessage)); err != nil {
+		return params, err
 	}
 	if err = params.AddInterfaceNonZero("link_preview_options", config.LinkPreviewOptions); err != nil {
 		return params, err
@@ -1561,10 +1570,7 @@ func (EditEphemeralMessageTextConfig) method() string {
 }
 
 func (config EditEphemeralMessageTextConfig) files() []RequestFile {
-	if config.RichMessage == nil {
-		return nil
-	}
-	return prepareInputRichMessageForFiles(*config.RichMessage)
+	return prepareInputRichMessageForFiles(config.RichMessage)
 }
 
 // EditEphemeralMessageMediaConfig edits the media of an ephemeral message.
@@ -1580,6 +1586,9 @@ func (config EditEphemeralMessageMediaConfig) params() (Params, error) {
 		return params, err
 	}
 
+	if isNilParamValue(config.Media) {
+		config.Media = nil
+	}
 	preparedMedia := prepareInputMediaForParams([]InputMedia{config.Media})
 	if err = params.AddInterface("media", preparedMedia[0]); err != nil {
 		return params, err
@@ -1594,6 +1603,9 @@ func (EditEphemeralMessageMediaConfig) method() string {
 }
 
 func (config EditEphemeralMessageMediaConfig) files() []RequestFile {
+	if isNilParamValue(config.Media) {
+		return nil
+	}
 	return prepareInputMediaForFiles([]InputMedia{config.Media})
 }
 

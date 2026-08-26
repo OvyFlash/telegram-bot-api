@@ -144,7 +144,7 @@ func TestBotAPI103NewTypesJSON(t *testing.T) {
 				Type:     "document",
 				Document: NewInputMediaDocument(FileID("doc")),
 			},
-			want: `"type":"document"`,
+			want: `"document":{"type":"document","media":"doc"}`,
 		},
 		{
 			name: "unique gift info",
@@ -237,11 +237,20 @@ func TestBotAPI103UpdateStoppedMessageGeneration(t *testing.T) {
 
 func TestBotAPI103RichDocumentUpload(t *testing.T) {
 	document := NewInputMediaDocument(FileBytes{Name: "notes.pdf", Bytes: []byte("%PDF")})
-	config := NewSendRichMessage(1, NewInputRichMessageBlocks(InputRichBlockDocument{
+	block := InputRichBlockDocument{
 		Type:     "document",
 		Document: document,
-	}))
+	}
+	config := NewSendRichMessage(1, NewInputRichMessageBlocks(block))
 	assertRichMessageUpload(t, config, []string{"rich-message-block-0"})
+
+	data, err := json.Marshal(block)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if strings.Contains(string(data), "attach://") {
+		t.Fatalf("user block was mutated: %s", data)
+	}
 }
 
 func stringPtr(v string) *string {
