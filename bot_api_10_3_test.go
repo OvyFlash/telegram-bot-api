@@ -57,7 +57,7 @@ func TestBotAPI103DraftStopParams(t *testing.T) {
 func TestBotAPI103EditEphemeralExtensions(t *testing.T) {
 	rich := NewInputRichMessageHTML("<p>hi</p>")
 	text := NewEditEphemeralMessageText(1, 2, 3, "")
-	text.RichMessage = &rich
+	text.RichMessage = rich
 	params, err := text.params()
 	if err != nil {
 		t.Fatalf("params: %v", err)
