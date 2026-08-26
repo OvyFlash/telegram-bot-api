@@ -138,7 +138,9 @@ func handle_bot_api_10_2_update(bot *api.BotAPI, update api.Update) {
 	}
 
 	reply := api.NewMessage(update.Message.Chat.ID, "Checking...")
-	reply.ReceiverUserID = update.Message.From.ID
+	reply.EphemeralMessageParameters = api.EphemeralMessageParameters{
+		ReceiverUserID: update.Message.From.ID,
+	}
 	reply.ReplyParameters.EphemeralMessageID = update.Message.EphemeralMessageID
 	sent, err := bot.Send(reply)
 	if err != nil {
