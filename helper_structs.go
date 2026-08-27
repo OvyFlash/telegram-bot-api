@@ -90,10 +90,14 @@ func (edit BaseEdit) params() (Params, error) {
 		}
 		params.Merge(p1)
 	}
+	if edit.ReplyMarkup != nil {
+		err := params.AddInterface("reply_markup", edit.ReplyMarkup)
+		if err != nil {
+			return params, err
+		}
+	}
 
-	err := params.AddInterface("reply_markup", edit.ReplyMarkup)
-
-	return params, err
+	return params, nil
 }
 
 // BaseEphemeralMessage identifies an ephemeral message received by a user.
