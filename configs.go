@@ -93,6 +93,12 @@ const (
 	// UpdateTypeCallbackQuery is new incoming callback query
 	UpdateTypeCallbackQuery = "callback_query"
 
+	// UpdateTypeWidgetQuery is new incoming query from a widget in a message sent by the bot or via the bot
+	UpdateTypeWidgetQuery = "widget_query"
+
+	// UpdateTypeSharedWidgetQuery is new incoming query from a forwarded message with a shared widget
+	UpdateTypeSharedWidgetQuery = "shared_widget_query"
+
 	// UpdateTypeShippingQuery is new incoming shipping query. Only for invoices with flexible price
 	UpdateTypeShippingQuery = "shipping_query"
 
@@ -466,6 +472,172 @@ func (config SendRichMessageDraftConfig) params() (Params, error) {
 	params.AddBool("keep_on_stop", config.KeepOnStop)
 
 	return params, err
+}
+
+// SendWidgetConfig contains information about a sendWidget request.
+//
+// Currently, in the production environment, widgets can be sent only to private chats,
+// and sent widgets automatically have protected content.
+type SendWidgetConfig struct {
+	BaseChat
+	HTML                  string // required
+	Width                 int
+	Height                int
+	PublicData            string
+	ChatData              string
+	Caption               string
+	ParseMode             string
+	CaptionEntities       []MessageEntity
+	ShowCaptionAboveMedia bool
+	AllowQueries          bool
+	IsShared              bool
+}
+
+func (config SendWidgetConfig) method() string {
+	return "sendWidget"
+}
+
+func (config SendWidgetConfig) params() (Params, error) {
+	params, err := config.BaseChat.params()
+	if err != nil {
+		return params, err
+	}
+
+	params["html"] = config.HTML
+	params.AddNonZero("width", config.Width)
+	params.AddNonZero("height", config.Height)
+	params.AddNonEmpty("public_data", config.PublicData)
+	params.AddNonEmpty("chat_data", config.ChatData)
+	params.AddNonEmpty("caption", config.Caption)
+	params.AddNonEmpty("parse_mode", config.ParseMode)
+	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
+	params.AddBool("allow_queries", config.AllowQueries)
+	params.AddBool("is_shared", config.IsShared)
+	err = params.AddInterface("caption_entities", config.CaptionEntities)
+
+	return params, err
+}
+
+// SendSharedWidgetConfig contains information about a sendSharedWidget request,
+// which sends again a shared widget created by the bot.
+type SendSharedWidgetConfig struct {
+	BaseChat
+	WidgetID              string // required
+	ChatData              string
+	Caption               string
+	ParseMode             string
+	CaptionEntities       []MessageEntity
+	ShowCaptionAboveMedia bool
+}
+
+func (config SendSharedWidgetConfig) method() string {
+	return "sendSharedWidget"
+}
+
+func (config SendSharedWidgetConfig) params() (Params, error) {
+	params, err := config.BaseChat.params()
+	if err != nil {
+		return params, err
+	}
+
+	params.AddNonEmpty("widget_id", config.WidgetID)
+	params.AddNonEmpty("chat_data", config.ChatData)
+	params.AddNonEmpty("caption", config.Caption)
+	params.AddNonEmpty("parse_mode", config.ParseMode)
+	params.AddBool("show_caption_above_media", config.ShowCaptionAboveMedia)
+	err = params.AddInterface("caption_entities", config.CaptionEntities)
+
+	return params, err
+}
+
+// AnswerWidgetQueryConfig answers a query from a widget within 15 seconds.
+// The answer is received only by the widget that sent the query and doesn't change
+// data of the widget.
+type AnswerWidgetQueryConfig struct {
+	WidgetQueryID string // required
+	Data          string
+}
+
+func (config AnswerWidgetQueryConfig) method() string {
+	return "answerWidgetQuery"
+}
+
+func (config AnswerWidgetQueryConfig) params() (Params, error) {
+	params := make(Params)
+
+	params["widget_query_id"] = config.WidgetQueryID
+	params.AddNonEmpty("data", config.Data)
+
+	return params, nil
+}
+
+// EditMessageWidgetDataConfig edits data of a widget in a message sent by the bot
+// or via the bot (for inline bots).
+//
+// Empty PublicData and ChatData keep the current values. Set RemovePublicData or
+// RemoveChatData to remove the corresponding data.
+type EditMessageWidgetDataConfig struct {
+	ChatConfig
+	MessageID        int
+	InlineMessageID  string
+	PublicData       string
+	RemovePublicData bool
+	ChatData         string
+	RemoveChatData   bool
+}
+
+func (config EditMessageWidgetDataConfig) method() string {
+	return "editMessageWidgetData"
+}
+
+func (config EditMessageWidgetDataConfig) params() (Params, error) {
+	params := make(Params)
+
+	if config.InlineMessageID != "" {
+		params["inline_message_id"] = config.InlineMessageID
+	} else {
+		p1, err := config.ChatConfig.params()
+		if err != nil {
+			return params, err
+		}
+		params.Merge(p1)
+		params.AddNonZero("message_id", config.MessageID)
+	}
+
+	if config.RemovePublicData {
+		params["public_data"] = ""
+	} else {
+		params.AddNonEmpty("public_data", config.PublicData)
+	}
+	if config.RemoveChatData {
+		params["chat_data"] = ""
+	} else {
+		params.AddNonEmpty("chat_data", config.ChatData)
+	}
+
+	return params, nil
+}
+
+// EditSharedWidgetDataConfig edits public data of a shared widget created by the bot.
+// An empty PublicData removes the public data.
+type EditSharedWidgetDataConfig struct {
+	WidgetID   string // required
+	PublicData string
+	CacheTime  int
+}
+
+func (config EditSharedWidgetDataConfig) method() string {
+	return "editSharedWidgetData"
+}
+
+func (config EditSharedWidgetDataConfig) params() (Params, error) {
+	params := make(Params)
+
+	params.AddNonEmpty("widget_id", config.WidgetID)
+	params["public_data"] = config.PublicData
+	params.AddNonZero("cache_time", config.CacheTime)
+
+	return params, nil
 }
 
 // ForwardConfig contains information about a ForwardMessage request.
@@ -3088,6 +3260,36 @@ func (config GetAvailableGiftsConfig) params() (Params, error) {
 	return nil, nil
 }
 
+// GetUniqueGiftConfig gets information about a unique gift by its name.
+// Returns a UniqueGift object on success.
+type GetUniqueGiftConfig struct {
+	Name string // required
+}
+
+func (config GetUniqueGiftConfig) method() string {
+	return "getUniqueGift"
+}
+
+func (config GetUniqueGiftConfig) params() (Params, error) {
+	params := make(Params)
+	params.AddNonEmpty("name", config.Name)
+
+	return params, nil
+}
+
+// GetChatShareThemeBackdropsConfig gets the list of backdrops, which can be used
+// as the background of a theme of the screen for sharing a link to a user or a chat.
+// Requires no parameters. Returns a ChatShareThemeBackdrops object.
+type GetChatShareThemeBackdropsConfig struct{}
+
+func (config GetChatShareThemeBackdropsConfig) method() string {
+	return "getChatShareThemeBackdrops"
+}
+
+func (config GetChatShareThemeBackdropsConfig) params() (Params, error) {
+	return nil, nil
+}
+
 // SendGiftConfig sends a gift to the given user or channel chat.
 // The gift can't be converted to Telegram Stars by the receiver.
 // Returns True on success.
@@ -3286,6 +3488,29 @@ func (config ConvertGiftToStarsConfig) params() (Params, error) {
 	return params, nil
 }
 
+// DeleteBusinessAccountGiftConfig deletes a regular gift owned by a managed business account
+// without receiving Telegram Stars for it. Requires the can_convert_gifts_to_stars
+// business bot right. The gift can be deleted only if it isn't limited and wasn't refunded.
+type DeleteBusinessAccountGiftConfig struct {
+	BusinessConnectionID BusinessConnectionID
+	OwnedGiftID          string
+}
+
+func (config DeleteBusinessAccountGiftConfig) method() string {
+	return "deleteBusinessAccountGift"
+}
+
+func (config DeleteBusinessAccountGiftConfig) params() (Params, error) {
+	params, err := config.BusinessConnectionID.params()
+	if err != nil {
+		return params, err
+	}
+
+	params.AddNonEmpty("owned_gift_id", config.OwnedGiftID)
+
+	return params, nil
+}
+
 // UpgradeGiftConfig upgrades a gift to a unique one.
 type UpgradeGiftConfig struct {
 	BusinessConnectionID BusinessConnectionID
@@ -3340,8 +3565,10 @@ func (config TransferGiftConfig) params() (Params, error) {
 // which is represented by the bot.
 // Returns True on success.
 type VerifyUserConfig struct {
-	UserID            int64 // required
-	CustomDescription string
+	UserID                     int64 // required
+	CustomDescription          string
+	CustomDescriptionParseMode string
+	CustomDescriptionEntities  []MessageEntity
 }
 
 func (config VerifyUserConfig) method() string {
@@ -3352,16 +3579,20 @@ func (config VerifyUserConfig) params() (Params, error) {
 	params := make(Params)
 	params.AddNonZero64("user_id", config.UserID)
 	params.AddNonEmpty("custom_description", config.CustomDescription)
+	params.AddNonEmpty("custom_description_parse_mode", config.CustomDescriptionParseMode)
+	err := params.AddInterface("custom_description_entities", config.CustomDescriptionEntities)
 
-	return params, nil
+	return params, err
 }
 
 // VerifyChatConfig verifies a chat on behalf of the organization
 // which is represented by the bot.
 // Returns True on success.
 type VerifyChatConfig struct {
-	Chat              ChatConfig
-	CustomDescription string
+	Chat                       ChatConfig
+	CustomDescription          string
+	CustomDescriptionParseMode string
+	CustomDescriptionEntities  []MessageEntity
 }
 
 func (config VerifyChatConfig) method() string {
@@ -3374,8 +3605,10 @@ func (config VerifyChatConfig) params() (Params, error) {
 		return params, err
 	}
 	params.AddNonEmpty("custom_description", config.CustomDescription)
+	params.AddNonEmpty("custom_description_parse_mode", config.CustomDescriptionParseMode)
+	err = params.AddInterface("custom_description_entities", config.CustomDescriptionEntities)
 
-	return params, nil
+	return params, err
 }
 
 // RemoveUserVerificationConfig removes verification from a user who is currently

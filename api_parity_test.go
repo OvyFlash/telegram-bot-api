@@ -184,8 +184,18 @@ func TestAPIParityMethodParameters(t *testing.T) {
 			"direct_messages_topic_id":  "promoted BaseChat field",
 			"suggested_post_parameters": "promoted BaseChat field",
 		},
+		"sendSharedWidget": {
+			"business_connection_id":    "promoted BaseChat field",
+			"direct_messages_topic_id":  "promoted BaseChat field",
+			"suggested_post_parameters": "promoted BaseChat field",
+		},
 		"sendVoice": {
 			"thumbnail": "legacy compatibility alias for older Bot API docs",
+		},
+		"sendWidget": {
+			"business_connection_id":    "promoted BaseChat field",
+			"direct_messages_topic_id":  "promoted BaseChat field",
+			"suggested_post_parameters": "promoted BaseChat field",
 		},
 		"setChatPhoto": {
 			"allow_paid_broadcast":      "promoted BaseChat field",
