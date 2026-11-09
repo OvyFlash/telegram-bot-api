@@ -92,10 +92,14 @@ func TestAddInterface(t *testing.T) {
 	}{
 		Name: "test",
 	}
-	params.AddInterface("value", data)
+	if err := params.AddInterface("value", data); err != nil {
+		t.Fatalf("AddInterface returned error: %v", err)
+	}
 	assertLen(t, params, 1)
 	assertEq(t, params["value"], `{"name":"test"}`)
-	params.AddInterface("test", nil)
+	if err := params.AddInterface("test", nil); err != nil {
+		t.Fatalf("AddInterface returned error: %v", err)
+	}
 	assertLen(t, params, 1)
 	assertEq(t, params["test"], "")
 }
@@ -121,10 +125,14 @@ func TestAddInterfaceSkipsNilSlicesAndKeepsEmptySlices(t *testing.T) {
 
 func TestAddFirstValid(t *testing.T) {
 	params := make(Params)
-	params.AddFirstValid("value", 0, "", "test")
+	if err := params.AddFirstValid("value", 0, "", "test"); err != nil {
+		t.Fatalf("AddFirstValid returned error: %v", err)
+	}
 	assertLen(t, params, 1)
 	assertEq(t, params["value"], "test")
-	params.AddFirstValid("value2", 3, "test")
+	if err := params.AddFirstValid("value2", 3, "test"); err != nil {
+		t.Fatalf("AddFirstValid returned error: %v", err)
+	}
 	assertLen(t, params, 2)
 	assertEq(t, params["value2"], "3")
 }

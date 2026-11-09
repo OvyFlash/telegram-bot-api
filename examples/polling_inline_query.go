@@ -6,8 +6,6 @@ import (
 	api "github.com/OvyFlash/telegram-bot-api"
 )
 
-// func main() { polling_inline_query() }
-
 func polling_inline_query() {
 	bot, err := api.NewBotAPI("MyAwesomeBotToken") // create new bot
 	if err != nil {

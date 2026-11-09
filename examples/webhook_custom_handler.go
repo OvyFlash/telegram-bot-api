@@ -8,8 +8,6 @@ import (
 	api "github.com/OvyFlash/telegram-bot-api"
 )
 
-// func main() { webhook_custom_handler() }
-
 func webhook_custom_handler() {
 	bot, err := api.NewBotAPI("MyAwesomeBotToken")
 	if err != nil {
@@ -39,7 +37,9 @@ func webhook_custom_handler() {
 		msg := api.NewMessage(update.Message.Chat.ID, update.Message.Text)
 		msg.ReplyParameters.MessageID = update.Message.MessageID
 
-		bot.Send(msg)
+		if _, err := bot.Send(msg); err != nil {
+			log.Println(err)
+		}
 	})
 
 	waitGroup := sync.WaitGroup{}

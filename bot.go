@@ -154,7 +154,9 @@ func (bot *BotAPI) executeRequest(ctx context.Context, endpoint string, payload 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	var apiResp APIResponse
 	bytes, err := bot.decodeAPIResponse(resp.Body, &apiResp)
@@ -1081,18 +1083,19 @@ func (bot *BotAPI) SavePreparedKeyboardButton(config SavePreparedKeyboardButtonC
 func EscapeText(parseMode string, text string) string {
 	var replacer *strings.Replacer
 
-	if parseMode == ModeHTML {
+	switch parseMode {
+	case ModeHTML:
 		replacer = strings.NewReplacer("<", "&lt;", ">", "&gt;", "&", "&amp;")
-	} else if parseMode == ModeMarkdown {
+	case ModeMarkdown:
 		replacer = strings.NewReplacer("_", "\\_", "*", "\\*", "`", "\\`", "[", "\\[")
-	} else if parseMode == ModeMarkdownV2 {
+	case ModeMarkdownV2:
 		replacer = strings.NewReplacer(
 			"_", "\\_", "*", "\\*", "[", "\\[", "]", "\\]", "(",
 			"\\(", ")", "\\)", "~", "\\~", "`", "\\`", ">", "\\>",
 			"#", "\\#", "+", "\\+", "-", "\\-", "=", "\\=", "|",
 			"\\|", "{", "\\{", "}", "\\}", ".", "\\.", "!", "\\!",
 		)
-	} else {
+	default:
 		return ""
 	}
 
