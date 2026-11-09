@@ -78,7 +78,62 @@ if err != nil {
 
 For a callback-query-triggered response, set `EphemeralMessageParameters.CallbackQueryID` on the selected send config instead of replying to an ephemeral message. Non-administrator bots must respond within 15 seconds of the eligible action. Telegram does not guarantee delivery, especially when the receiver is offline.
 
+Since Bot API 10.4, a bot can send an ephemeral reply to a callback query in any chat except channel direct messages chats. Omit both the chat and `ReceiverUserID`; only the user who pressed the button sees the reply. The bot must still answer the callback query:
+
+```go
+query := update.CallbackQuery
+_, err := bot.Send(tgbotapi.NewEphemeralCallbackReply(query.ID, "Only you can see this"))
+if err != nil {
+	log.Println(err)
+}
+_, err = bot.Request(tgbotapi.NewCallback(query.ID, ""))
+```
+
 The edit and delete methods require all three identifiers: chat, receiver user, and ephemeral message. `EditEphemeralMessageCaption` accepts an empty caption to remove it. `EditEphemeralMessageMedia` supports uploading new files.
+
+## Widgets
+
+Bot API 10.4 adds messages with HTML widgets. In the production environment, widgets can be sent only to private chats, and sent widgets have protected content. Widget messages can't be copied with `copyMessage` or `copyMessages`.
+
+```go
+widget := tgbotapi.NewSendWidget(chatID, `<button id="ping">Ping</button>`)
+widget.Height = 120
+widget.AllowQueries = true
+widget.IsShared = true
+
+sent, err := bot.Send(widget)
+if err != nil {
+	log.Println(err)
+} else {
+	log.Printf("shared widget %s", sent.Widget.ID)
+}
+```
+
+`Message.Widget.ID` contains the identifier of a shared widget. Send it again with `NewSendSharedWidget`, and change its public data with `EditSharedWidgetData`. `EditMessageWidgetData` changes the data of one message; set `RemovePublicData` or `RemoveChatData` to remove a value, because an empty string keeps the current value.
+
+Request `UpdateTypeWidgetQuery` and `UpdateTypeSharedWidgetQuery` to receive queries from widgets, and answer each query within 15 seconds:
+
+```go
+updateConfig := tgbotapi.NewUpdate(0)
+updateConfig.AllowedUpdates = []string{
+	tgbotapi.UpdateTypeWidgetQuery,
+	tgbotapi.UpdateTypeSharedWidgetQuery,
+}
+
+for update := range bot.GetUpdatesChan(updateConfig) {
+	if query := update.WidgetQuery; query != nil {
+		if query.Type.IsSignData() {
+			log.Printf("data signed by %s", query.Type.Wallet.Address)
+		}
+		_, err := bot.AnswerWidgetQuery(tgbotapi.NewAnswerWidgetQuery(query.ID, "pong"))
+		if err != nil {
+			log.Println(err)
+		}
+	}
+}
+```
+
+`WidgetQueryType` also reports TON wallet cards (`IsData`) and sent transactions (`IsSentTransaction`). Use `InputWidgetMessageContent` and `InputSharedWidgetMessageContent` for inline query results; the production environment does not accept them yet.
 
 ## Subscription and Community Updates
 

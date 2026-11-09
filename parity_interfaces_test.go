@@ -50,6 +50,14 @@ var (
 	_ Chattable = RemoveBusinessAccountProfilePhotoConfig{}
 	_ Chattable = SavePreparedKeyboardButtonConfig{}
 	_ Chattable = ChatMemberCountConfig{}
+	_ Chattable = SendWidgetConfig{}
+	_ Chattable = SendSharedWidgetConfig{}
+	_ Chattable = AnswerWidgetQueryConfig{}
+	_ Chattable = EditMessageWidgetDataConfig{}
+	_ Chattable = EditSharedWidgetDataConfig{}
+	_ Chattable = GetUniqueGiftConfig{}
+	_ Chattable = GetChatShareThemeBackdropsConfig{}
+	_ Chattable = DeleteBusinessAccountGiftConfig{}
 )
 
 var (
@@ -73,6 +81,7 @@ var (
 	_ InlineQueryResultMpeg4Gif
 	_ InlineQueryResultCachedMpeg4Gif
 	_ TransactionPartnerTelegramApi
-	_ InputMedia = (*InputMediaLink)(nil)
-	_ InputMedia = (*InputMediaVoiceNote)(nil)
+	_ StoryAreaPosition = AreaPosition{}
+	_ InputMedia        = (*InputMediaLink)(nil)
+	_ InputMedia        = (*InputMediaVoiceNote)(nil)
 )

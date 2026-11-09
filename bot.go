@@ -331,6 +331,21 @@ func (bot *BotAPI) SendRichMessageDraft(config SendRichMessageDraftConfig) (bool
 	return bot.requestBool(config)
 }
 
+// AnswerWidgetQuery sends an answer to a query from a widget.
+func (bot *BotAPI) AnswerWidgetQuery(config AnswerWidgetQueryConfig) (bool, error) {
+	return bot.requestBool(config)
+}
+
+// EditMessageWidgetData edits data of a widget in a message.
+func (bot *BotAPI) EditMessageWidgetData(config EditMessageWidgetDataConfig) (bool, error) {
+	return bot.requestBool(config)
+}
+
+// EditSharedWidgetData edits public data of a shared widget created by the bot.
+func (bot *BotAPI) EditSharedWidgetData(config EditSharedWidgetDataConfig) (bool, error) {
+	return bot.requestBool(config)
+}
+
 // EditEphemeralMessageText edits an ephemeral text message.
 func (bot *BotAPI) EditEphemeralMessageText(config EditEphemeralMessageTextConfig) (bool, error) {
 	return bot.requestBool(config)
@@ -819,6 +834,37 @@ func (bot *BotAPI) GetBusinessAccountGifts(config GetBusinessAccountGiftsConfig)
 	err = json.Unmarshal(resp.Result, &gifts)
 
 	return gifts, err
+}
+
+// DeleteBusinessAccountGift deletes a regular gift owned by a managed business account.
+func (bot *BotAPI) DeleteBusinessAccountGift(config DeleteBusinessAccountGiftConfig) (bool, error) {
+	return bot.requestBool(config)
+}
+
+// GetUniqueGift gets information about a unique gift by its name.
+func (bot *BotAPI) GetUniqueGift(config GetUniqueGiftConfig) (UniqueGift, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return UniqueGift{}, err
+	}
+
+	var gift UniqueGift
+	err = json.Unmarshal(resp.Result, &gift)
+
+	return gift, err
+}
+
+// GetChatShareThemeBackdrops gets the list of backdrops for chat share themes.
+func (bot *BotAPI) GetChatShareThemeBackdrops(config GetChatShareThemeBackdropsConfig) (ChatShareThemeBackdrops, error) {
+	resp, err := bot.Request(config)
+	if err != nil {
+		return ChatShareThemeBackdrops{}, err
+	}
+
+	var backdrops ChatShareThemeBackdrops
+	err = json.Unmarshal(resp.Result, &backdrops)
+
+	return backdrops, err
 }
 
 // GetUserGifts gets gifts owned by a user.
