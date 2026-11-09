@@ -555,7 +555,9 @@ func getBot(t *testing.T) (*BotAPI, error) {
 	bot.Debug = true
 
 	logger := testLogger{t}
-	SetLogger(logger)
+	if loggerErr := SetLogger(logger); loggerErr != nil {
+		t.Fatal(loggerErr)
+	}
 
 	if err != nil {
 		t.Error(err)
@@ -1039,7 +1041,9 @@ func TestSetWebhookWithCert(t *testing.T) {
 
 	time.Sleep(time.Second * 2)
 
-	bot.Request(DeleteWebhookConfig{})
+	if _, err := bot.Request(DeleteWebhookConfig{}); err != nil {
+		t.Error(err)
+	}
 
 	wh, err := NewWebhookWithCert("https://example.com/tgbotapi-test/"+bot.Token, FilePath("tests/cert.pem"))
 	if err != nil {
@@ -1055,7 +1059,9 @@ func TestSetWebhookWithCert(t *testing.T) {
 		t.Error(err)
 	}
 
-	bot.Request(DeleteWebhookConfig{})
+	if _, err := bot.Request(DeleteWebhookConfig{}); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestSetWebhookWithoutCert(t *testing.T) {
@@ -1063,7 +1069,9 @@ func TestSetWebhookWithoutCert(t *testing.T) {
 
 	time.Sleep(time.Second * 2)
 
-	bot.Request(DeleteWebhookConfig{})
+	if _, err := bot.Request(DeleteWebhookConfig{}); err != nil {
+		t.Error(err)
+	}
 
 	wh, err := NewWebhook("https://example.com/tgbotapi-test/" + bot.Token)
 	if err != nil {
@@ -1086,7 +1094,9 @@ func TestSetWebhookWithoutCert(t *testing.T) {
 		t.Errorf("failed to set webhook: %s", info.LastErrorMessage)
 	}
 
-	bot.Request(DeleteWebhookConfig{})
+	if _, err := bot.Request(DeleteWebhookConfig{}); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestSendWithMediaGroupPhotoVideo(t *testing.T) {

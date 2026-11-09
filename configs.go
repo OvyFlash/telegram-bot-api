@@ -2121,9 +2121,9 @@ func (config UpdateConfig) params() (Params, error) {
 	params.AddNonZero("offset", config.Offset)
 	params.AddNonZero("limit", config.Limit)
 	params.AddNonZero("timeout", config.Timeout)
-	params.AddInterface("allowed_updates", config.AllowedUpdates)
+	err := params.AddInterface("allowed_updates", config.AllowedUpdates)
 
-	return params, nil
+	return params, err
 }
 
 // WebhookConfig contains information about a SetWebhook request.
@@ -3788,9 +3788,9 @@ type GetCustomEmojiStickersConfig struct {
 func (config GetCustomEmojiStickersConfig) params() (Params, error) {
 	params := make(Params)
 
-	params.AddInterface("custom_emoji_ids", config.CustomEmojiIDs)
+	err := params.AddInterface("custom_emoji_ids", config.CustomEmojiIDs)
 
-	return params, nil
+	return params, err
 }
 
 func (config GetCustomEmojiStickersConfig) method() string {

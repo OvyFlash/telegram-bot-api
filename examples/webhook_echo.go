@@ -7,8 +7,6 @@ import (
 	api "github.com/OvyFlash/telegram-bot-api"
 )
 
-// func main() { webhook_echo() }
-
 func webhook_echo() {
 	bot, err := api.NewBotAPI("MyAwesomeBotToken")
 	if err != nil {
@@ -21,7 +19,11 @@ func webhook_echo() {
 
 	// Listen for updates from the webhook
 	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServeTLS("0.0.0.0:8443", "cert.pem", "key.pem", nil)
+	go func() {
+		if err := http.ListenAndServeTLS("0.0.0.0:8443", "cert.pem", "key.pem", nil); err != nil {
+			log.Printf("Error listening on TLS: %v", err)
+		}
+	}()
 
 	// Set the webhook
 	webHook, err := api.NewWebhookWithCert("https://your-bot-host-url/"+bot.Token, api.FilePath("cert.pem"))
@@ -60,6 +62,8 @@ func webhook_echo() {
 		msg := api.NewMessage(update.Message.Chat.ID, update.Message.Text)
 		msg.ReplyParameters.MessageID = update.Message.MessageID
 
-		bot.Send(msg)
+		if _, err := bot.Send(msg); err != nil {
+			log.Println(err)
+		}
 	}
 }

@@ -209,8 +209,8 @@ func TestNewEditMessageMedia(t *testing.T) {
 	if media, ok := edit.Media.(*BaseInputMedia); !ok ||
 		media.Type != "photo" ||
 		media.Media != baseInputMedia.Media ||
-		edit.BaseEdit.ChatID != ChatID ||
-		edit.BaseEdit.MessageID != ReplyToMessageID {
+		edit.ChatID != ChatID ||
+		edit.MessageID != ReplyToMessageID {
 		t.Fail()
 	}
 }
@@ -227,8 +227,8 @@ func TestNewEditMessagePhoto(t *testing.T) {
 	if media, ok := edit.Media.(*InputMediaPhoto); !ok ||
 		media.Type != "photo" ||
 		media.Media != inputMediaPhoto.Media ||
-		edit.BaseEdit.ChatID != ChatID ||
-		edit.BaseEdit.MessageID != ReplyToMessageID {
+		edit.ChatID != ChatID ||
+		edit.MessageID != ReplyToMessageID {
 		t.Fail()
 	}
 }
@@ -245,8 +245,8 @@ func TestNewEditMessageVideo(t *testing.T) {
 	if media, ok := edit.Media.(*InputMediaVideo); !ok ||
 		media.Type != "video" ||
 		media.Media != inputMediaVideo.Media ||
-		edit.BaseEdit.ChatID != ChatID ||
-		edit.BaseEdit.MessageID != ReplyToMessageID {
+		edit.ChatID != ChatID ||
+		edit.MessageID != ReplyToMessageID {
 		t.Fail()
 	}
 }
@@ -263,8 +263,8 @@ func TestNewEditMessageAnimation(t *testing.T) {
 	if media, ok := edit.Media.(*InputMediaAnimation); !ok ||
 		media.Type != "animation" ||
 		media.Media != inputMediaAnimation.Media ||
-		edit.BaseEdit.ChatID != ChatID ||
-		edit.BaseEdit.MessageID != ReplyToMessageID {
+		edit.ChatID != ChatID ||
+		edit.MessageID != ReplyToMessageID {
 		t.Fail()
 	}
 }
@@ -281,8 +281,8 @@ func TestNewEditMessageAudio(t *testing.T) {
 	if media, ok := edit.Media.(*InputMediaAudio); !ok ||
 		media.Type != "audio" ||
 		media.Media != inputMediaAudio.Media ||
-		edit.BaseEdit.ChatID != ChatID ||
-		edit.BaseEdit.MessageID != ReplyToMessageID {
+		edit.ChatID != ChatID ||
+		edit.MessageID != ReplyToMessageID {
 		t.Fail()
 	}
 }
@@ -299,8 +299,8 @@ func TestNewEditMessageDocument(t *testing.T) {
 	if media, ok := edit.Media.(*InputMediaDocument); !ok ||
 		media.Type != "document" ||
 		media.Media != inputMediaDocument.Media ||
-		edit.BaseEdit.ChatID != ChatID ||
-		edit.BaseEdit.MessageID != ReplyToMessageID {
+		edit.ChatID != ChatID ||
+		edit.MessageID != ReplyToMessageID {
 		t.Fail()
 	}
 }
@@ -309,8 +309,8 @@ func TestNewEditMessageText(t *testing.T) {
 	edit := NewEditMessageText(ChatID, ReplyToMessageID, "new text")
 
 	if edit.Text != "new text" ||
-		edit.BaseEdit.ChatID != ChatID ||
-		edit.BaseEdit.MessageID != ReplyToMessageID {
+		edit.ChatID != ChatID ||
+		edit.MessageID != ReplyToMessageID {
 		t.Fail()
 	}
 }
@@ -319,8 +319,8 @@ func TestNewEditMessageCaption(t *testing.T) {
 	edit := NewEditMessageCaption(ChatID, ReplyToMessageID, "new caption")
 
 	if edit.Caption != "new caption" ||
-		edit.BaseEdit.ChatID != ChatID ||
-		edit.BaseEdit.MessageID != ReplyToMessageID {
+		edit.ChatID != ChatID ||
+		edit.MessageID != ReplyToMessageID {
 		t.Fail()
 	}
 }
@@ -337,8 +337,8 @@ func TestNewEditMessageReplyMarkup(t *testing.T) {
 	edit := NewEditMessageReplyMarkup(ChatID, ReplyToMessageID, markup)
 
 	if edit.ReplyMarkup.InlineKeyboard[0][0].Text != "test" ||
-		edit.BaseEdit.ChatID != ChatID ||
-		edit.BaseEdit.MessageID != ReplyToMessageID {
+		edit.ChatID != ChatID ||
+		edit.MessageID != ReplyToMessageID {
 		t.Fail()
 	}
 }

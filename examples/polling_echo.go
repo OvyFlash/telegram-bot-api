@@ -7,8 +7,6 @@ import (
 	api "github.com/OvyFlash/telegram-bot-api"
 )
 
-// func main() { polling_echo() }
-
 func polling_echo() {
 	bot, err := api.NewBotAPI("MyAwesomeBotToken")
 	if err != nil {
@@ -68,6 +66,8 @@ func polling_echo() {
 		msg := api.NewMessage(update.Message.Chat.ID, update.Message.Text)
 		msg.ReplyParameters.MessageID = update.Message.MessageID
 
-		bot.Send(msg)
+		if _, err := bot.Send(msg); err != nil {
+			log.Println(err)
+		}
 	}
 }
